@@ -1,0 +1,2 @@
+def cnonce():
+    pass
