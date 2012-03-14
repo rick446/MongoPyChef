@@ -67,16 +67,3 @@ class EnvironmentCookbookVersions(Resource):
     def __repr__(self):
         return '<EnvironmentCookbookVersions %s>' % self.environment.name
 
-class EnvironmentCookbook(Resource):
-
-    def __init__(self, parent, name):
-        self.__parent__ = parent
-        self.__name__ = name
-        self.request = parent.request
-        self.environment = parent.environment
-        self.name = name
-
-    def __repr__(self):
-        return '<EnvironmentCookbook %s => %s>' % (
-            self.environment.name, self.__name__)
-
