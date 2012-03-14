@@ -23,6 +23,6 @@ def create_sandbox(context, request):
     request_method='PUT',
     permission='update')
 def close_sandbox(context, request):
-    context.close()
+    context.close(request)
     return dict(is_completed=True)
 

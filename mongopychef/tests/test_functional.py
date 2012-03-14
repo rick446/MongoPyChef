@@ -465,6 +465,7 @@ class TestSandbox(ChefTest):
         super(TestSandbox, self).setUp()
         self.file_content = 'Hello World'
         self.file_checksum = md5(self.file_content).hexdigest()
+        self.file_url = 'http://test/files/%s-%s/' % (self.a1._id, self.file_checksum)
         M.orm_session.flush()
         M.orm_session.clear()
 
@@ -487,8 +488,7 @@ class TestSandbox(ChefTest):
         self.assertEqual(result, {
                 u'checksums': {
                     u'b10a8db164e0754105b7a99be72e3fe5': {
-                        u'url': uri+'b10a8db164e0754105b7a99be72e3fe5',
-                        u'needs_upload': True}}})
+                        u'url': self.file_url, u'needs_upload': True}}})
 
     def test_close_sandbox_ok(self):
         sb = self._create_sandbox()
