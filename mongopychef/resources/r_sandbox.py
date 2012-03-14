@@ -1,0 +1,1 @@
+class Sandboxes(object): pass

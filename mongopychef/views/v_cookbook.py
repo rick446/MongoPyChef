@@ -37,7 +37,7 @@ def view_cookbook(context, request):
         request.params.get('num_versions', 1), None)
     cookbooks = M.CookbookVersion.query.find(dict(
             account_id=request.account._id,
-            name=context.cookbook_name)).all()
+            name=context.name)).all()
     if not cookbooks:
         raise exc.HTTPNotFound()
     cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
@@ -45,7 +45,7 @@ def view_cookbook(context, request):
     return dict(
         name=dict(
             url=M.CookbookVersion.cookbook_url(
-                request, context.cookbook_name),
+                request, context.name),
             versions=[
                 dict(url=cb.url(), version=cb.version)
                 for cb in cookbooks ]))
@@ -62,12 +62,12 @@ def view_cookbook_version(context, request):
 def update_cookbook_version(context, request):
     M.CookbookVersion.query.remove(dict(
         account_id=request.account._id,
-        name=context.cookbook_name,
-        version=context.cookbook_version))
+        name=context.name,
+        version=context.version))
     cb = M.CookbookVersion(
         account_id=context.account._id,
-        name=context.cookbook_name,
-        version=context.cookbook_version)
+        name=context.name,
+        version=context.version)
     cb.update(V.NodeSchema().to_python(request.json, None))
     return {}
 
@@ -77,8 +77,8 @@ def update_cookbook_version(context, request):
 def delete_cookbook_version(context, request):
     M.CookbookVersion.query.remove(dict(
         account_id=request.account._id,
-        name=context.cookbook_name,
-        version=context.cookbook_version))
+        name=context.name,
+        version=context.version))
     return {}
 
 

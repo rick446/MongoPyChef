@@ -1,0 +1,1 @@
+class Roles(object): pass

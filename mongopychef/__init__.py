@@ -4,7 +4,7 @@ from pyramid.session import UnencryptedCookieSessionFactoryConfig
 
 import ming.odm.middleware
 
-from .resources import Root
+from .resources.r_root import Root
 from .security import ChefAuthorizationPolicy
 
 def main(global_config, **settings):
