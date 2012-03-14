@@ -16,6 +16,8 @@ account = collection(
     Field('name', str))
 
 class Account(object):
+    __parent__ = None
+    __name__ = None
 
     @classmethod
     def bootstrap(self, shortname):
