@@ -131,12 +131,12 @@ class ChefTest(TestCase):
 
 class TestClient(ChefTest):
     clients_1 = {
-        'test-1-validator':'http://test/clients/test-1-validator',
-        'test-user-1':'http://test/clients/test-user-1',
+        'test-1-validator':'http://test/clients/test-1-validator/',
+        'test-user-1':'http://test/clients/test-user-1/',
         }
     clients_2 = {
-        'test-2-validator':'http://test/clients/test-2-validator',
-        'test-user-2':'http://test/clients/test-user-2'
+        'test-2-validator':'http://test/clients/test-2-validator/',
+        'test-user-2':'http://test/clients/test-user-2/'
         }
 
     def test_list(self):
@@ -157,7 +157,7 @@ class TestClient(ChefTest):
         result = self.chef_1_validator.api_request(
             'POST', '/clients', data=dict(
                     name='rick', admin=True))
-        self.assertEqual(result['uri'], 'http://test/clients/rick')
+        self.assertEqual(result['uri'], 'http://test/clients/rick/')
         self.assert_(1600 < len(result['private_key']) < 1700)
 
     @expect_errors([409])
@@ -249,14 +249,14 @@ class TestNode(ChefTest):
     def test_list(self):
         result = self.chef_1_validator.api_request('GET', '/nodes')
         self.assertEqual(result, {
-                u'test-node': u'http://test/nodes/test-node'})
+                u'test-node': u'http://test/nodes/test-node/'})
 
     def test_post_ok(self):
         result = self.chef_1_validator.api_request(
             'POST', '/nodes',  data=dict(
                 name='foo'))
         self.assertEqual(result, {
-                'uri': u'http://test/nodes/foo'})
+                'uri': u'http://test/nodes/foo/'})
 
     @expect_errors([409])
     def test_post_duplicate(self):

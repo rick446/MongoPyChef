@@ -1,11 +1,10 @@
 from itertools import groupby
 
 from webob import exc
-from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Cookbooks, Cookbook, CookbookVersion
+from ..resources import Cookbooks, Cookbook
 from .. import model as M
 from ..lib import validators as V
 
@@ -55,40 +54,29 @@ def view_cookbook(context, request):
                 for cb in cookbooks ]))
 
 @view_config(
-    context=CookbookVersion,
+    context=M.CookbookVersion,
     renderer='json',
     request_method='GET',
     permission='read')
 def view_cookbook_version(context, request):
-    return context.cookbook_version.__json__()
+    return context.__json__()
 
 @view_config(
-    context=CookbookVersion,
+    context=M.CookbookVersion,
     renderer='json',
     request_method='PUT',
     permission='update')
 def update_cookbook_version(context, request):
-    M.CookbookVersion.query.remove(dict(
-        account_id=request.account._id,
-        name=context.name,
-        version=context.version))
-    cb = M.CookbookVersion(
-        account_id=context.account._id,
-        name=context.name,
-        version=context.version)
-    cb.update(V.NodeSchema().to_python(request.json, None))
+    context.update(V.NodeSchema().to_python(request.json, None))
     return {}
 
 @view_config(
-    context=CookbookVersion,
+    context=M.CookbookVersion,
     renderer='json',
     request_method='DELETE',
     permission='delete')
 def delete_cookbook_version(context, request):
-    M.CookbookVersion.query.remove(dict(
-        account_id=request.account._id,
-        name=context.name,
-        version=context.version))
+    context.delete()
     return {}
 
 

@@ -11,10 +11,9 @@ from .. import model as M
     renderer='json',
     request_method='GET',
     permission='read')
-def list_clients(request):
+def list_clients(context, request):
     return dict(
-        (cli.name, request.resource_url(cli))
-        for cli in M.Client.query.find(dict(account_id=request.account._id)))
+        (cli.name, request.resource_url(cli)) for cli in context.find())
 
 @view_config(context=Clients,
              renderer='json',
