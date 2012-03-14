@@ -39,6 +39,11 @@ class Account(object):
             permissions=['view'])
         return a, (admins, engineers, users)
 
+    def get_object(self, cls, **kwargs):
+        return cls.query.get(
+            account_id=self._id,
+            **kwargs)
+
     def allow_access(self, permission, user):
         from .m_auth import Group
         match= Group.query.get(

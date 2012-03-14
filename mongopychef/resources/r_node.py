@@ -14,20 +14,19 @@ class Nodes(object):
         return False
 
     def __getitem__(self, name):
-        return Node(self.request, self, name)
+        return Node(self, name)
 
     def __repr__(self):
         return '<Nodes>'
 
 class Node(dict):
 
-    def __init__(self, request, parent, name):
-        self.request = request
+    def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
-        self.node = M.Node.query.get(
-            account_id=request.client.account_id,
-            name=name)
+        self.request = parent.request
+        self.node = parent.request.account.get_item(
+            M.Node, name=name)
         if self.node is None:
             raise exc.HTTPNotFound()
 

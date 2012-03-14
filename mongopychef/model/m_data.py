@@ -26,9 +26,15 @@ databag_item = collection(
 
 class Databag(object): 
 
-    def url(self):
+    def url(self, request):
         return request.relative_url(
-            config.chef_api_root + '/data/' + self.name)
+            '/data/' + self.name)
+
+    def get_item(self, name):
+        return DatabagItem.query.get(
+            account_id=self.account_id,
+            databag_id=self._id,
+            id=name)
 
 class DatabagItem(object): 
 

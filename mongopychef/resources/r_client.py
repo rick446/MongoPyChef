@@ -14,20 +14,19 @@ class Clients(object):
         return False
 
     def __getitem__(self, name):
-        return Client(self.request, self, name)
+        return Client(self, name)
 
     def __repr__(self):
         return '<Clients>'
 
 class Client(object):
 
-    def __init__(self, request, parent, name):
-        self.request = request
+    def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
-        self.client = M.Client.query.get(
-            account_id=request.client.account_id,
-            name=name)
+        self.request = parent.request
+        self.client = parent.request.account.get_object(
+            M.Client, name=name)
         if self.client is None:
             raise exc.HTTPNotFound()
 

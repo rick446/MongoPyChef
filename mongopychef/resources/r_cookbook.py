@@ -2,8 +2,8 @@ class Cookbooks(object):
     __name__ = 'cookbooks'
 
     def __init__(self, request, parent):
-        self.request = request
         self.__parent__ = parent
+        self.request = request
         
     def allow_access(self, permission):
         if permission == 'view': return True
@@ -11,17 +11,17 @@ class Cookbooks(object):
         return False
 
     def __getitem__(self, name):
-        return Cookbook(self.request, self, name)
+        return Cookbook(self, name)
 
     def __repr__(self):
         return '<Cookbooks>'
 
 class Cookbook(object):
 
-    def __init__(self, request, parent, name):
-        self.request = request
+    def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
+        self.request = parent.request
         self.name = name
 
     def allow_access(self, permission):
@@ -37,10 +37,10 @@ class Cookbook(object):
 
 class CookbookVersion(object):
 
-    def __init__(self, request, parent, name):
-        self.request = request
+    def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
+        self.request = parent.request
         self.name = parent.name
         self.version = name
 
