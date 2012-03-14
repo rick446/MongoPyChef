@@ -2,8 +2,6 @@ import logging
 
 from pyramid.authorization import ACLAuthorizationPolicy
 
-from . import model as M
-
 log = logging.getLogger(__name__)
 
 
@@ -14,8 +12,6 @@ class ChefAuthorizationPolicy(ACLAuthorizationPolicy):
         """ Return ``True`` if any of the ``principals`` is allowed the
         ``permission`` in the current ``context``, else return ``False``
         """
-        for p in principals:
-            if isinstance(p, M.Client):
-                if p.admin: return True
-        return super(ChefAuthorizationPolicy, self).permits(context, principals, permission)
-
+        if hasattr(context, 'allow_access'):
+            return context.allow_access(permission)
+        return True

@@ -18,7 +18,6 @@ def main(global_config, **settings):
         root_factory=Root,
         session_factory=session_factory)
     config.set_authentication_policy(RemoteUserAuthenticationPolicy())
-    # config.set_authorization_policy(ACLAuthorizationPolicy())
     config.set_authorization_policy(ChefAuthorizationPolicy())
     config.add_static_view('static', 'mongopychef:static')
     config.scan()

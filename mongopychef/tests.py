@@ -190,9 +190,12 @@ class TestClient(ChefTest):
         result = self.chef_user_1.api_request(
             'GET', '/clients/test-1-validator')
         self.assert_(result['status'].startswith('403'))
+
+    @expect_errors([404])
+    def test_get_other_account(self):
         result = self.chef_1_validator.api_request(
             'GET', '/clients/test-user-2')
-        self.assert_(result['status'].startswith('403'))
+        self.assert_(result['status'].startswith('404'))
 
     @expect_errors([404])
     def test_get_404(self):

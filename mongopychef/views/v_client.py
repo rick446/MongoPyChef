@@ -6,8 +6,8 @@ from pymongo.errors import DuplicateKeyError
 from pyramid.view import view_config
 from pyramid.exceptions import Forbidden
 
-from .resources import Clients, Client
-from . import model as M
+from ..resources import Clients, Client
+from .. import model as M
 
 @view_config(context=Clients, renderer='json', request_method='GET')
 def list_clients(request):
@@ -20,11 +20,8 @@ def list_clients(request):
              request_method='POST',
              permission='add')
 def create_client(request):
-    name=request.json['name']
-    admin=request.json['admin']
-    
     cli, key = M.Client.generate(
-        request.client.principal, name=name, admin=admin)
+        request.client.principal, **request.json)
     try:
         M.orm_session.flush(cli)
     except DuplicateKeyError:
@@ -38,8 +35,6 @@ def create_client(request):
     context=Client, renderer='json', request_method='GET',
     permission='view')
 def get_client(context, request):
-    if context.client.account_id != request.client.account_id:
-        raise exc.HTTPForbidden()
     if not request.client.admin and context.client != request.client:
         raise exc.HTTPForbidden()
     return request.context.client.__json__()
