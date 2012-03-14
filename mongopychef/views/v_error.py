@@ -10,7 +10,7 @@ from pyramid.exceptions import Forbidden
 @view_config(context=Forbidden)
 def on_error(exception, request):
     exception.body = json.dumps(dict(
-        status=exc.status))
+        status=exception.status))
     return exception
 
 @view_config(context=Invalid)
