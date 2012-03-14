@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Nodes, Node, NodeCookbooks
+from ..resources import Nodes, Node
 from .. import model as M
 from ..lib import validators as V
 
@@ -12,14 +12,14 @@ def list_nodes(request):
     return dict(
         (n.name, n.url(request))
         for n in M.Node.query.find(dict(
-                account_id=request.client.account_id)))
+                account_id=request.account._id)))
 
 @view_config(context=Nodes,
              renderer='json',
              request_method='POST',
              permission='add')
 def create_node(request):
-    n = M.Node(account_id=request.client.account._id)
+    n = M.Node(account_id=request.account._id)
     n.update(V.NodeSchema().to_python(request.json, None))
     try:
         M.orm_session.flush(n)
@@ -36,7 +36,7 @@ def get_node(context, request):
 
 @view_config(
     context=Node, renderer='json', request_method='PUT',
-    permission='view')
+    permission='edit')
 def update_node(context, request):
     assert request.json['name'] == context.node.name
     context.node.update(V.NodeSchema().to_python(request.json, None))

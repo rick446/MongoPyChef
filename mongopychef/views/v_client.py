@@ -10,7 +10,7 @@ from .. import model as M
 def list_clients(request):
     return dict(
         (cli.name, cli.url(request))
-        for cli in M.Client.query.find(dict(account_id=request.client.account_id)))
+        for cli in M.Client.query.find(dict(account_id=request.account._id)))
 
 @view_config(context=Clients,
              renderer='json',

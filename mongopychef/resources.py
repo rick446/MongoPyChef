@@ -79,7 +79,6 @@ class Node(dict):
         self.node = M.Node.query.get(
             account_id=request.client.account_id,
             name=name)
-        self['cookbooks'] = NodeCookbooks(request, self)
         if self.node is None:
             raise exc.HTTPNotFound()
 
@@ -90,19 +89,4 @@ class Node(dict):
         
     def __repr__(self):
         return '<Node %s>' % self.__name__
-
-class NodeCookbooks(object):
-    __name__ = 'cookbooks'
-    
-    def __init__(self, request, parent):
-        self.request = request
-        self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-        
-
-        
 

@@ -36,12 +36,12 @@ class CookbookVersion(object):
         return tuple(int(x) for x in self.version.split('.'))
 
     @classmethod
-    def cookbook_url(cls, name):
+    def cookbook_url(cls, request, name):
         return request.relative_url(
-            config.chef_api_root + '/cookbooks/' + name)
+            '/cookbooks/' + name)
 
-    def url(self):
-        return self.cookbook_url(self.name) + '/' + self.version
+    def url(self, request):
+        return self.cookbook_url(request, self.name) + '/' + self.version
 
     def __json__(self):
         return dict(
