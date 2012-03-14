@@ -27,13 +27,13 @@ class Sandbox(object):
     CHUNKSIZE=4096
 
     @classmethod
-    def url_for(cls, checksum):
+    def url_for(cls, request, checksum):
         return request.relative_url(
-            config.chef_api_root + '/files/' + checksum)
+            '/files/' + checksum)
 
     @classmethod
     def create(cls, account, checksums):
-        sb = cls(account_id=c.account._id)
+        sb = cls(account_id=account._id)
         file_index = dict(
             (sb.file_id(cs), cs)
             for cs in checksums)
@@ -70,12 +70,12 @@ class Sandbox(object):
     def file_id(self, checksum):
         return str(self.account_id) + '/' + checksum
 
-    def url(self):
+    def url(self, request):
         return request.relative_url(
-            config.chef_api_root + '/sandboxes/' + self._id)
+            '/sandboxes/' + self._id)
 
     def upload(self, checksum, ifp):
-        _id = str(c.account._id) + '/' + checksum
+        _id = str(self.account._id) + '/' + checksum
         chef_file.m.fs.delete(_id)
         with chef_file.m.fs.new_file(
             _id=_id,
