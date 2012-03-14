@@ -120,3 +120,4 @@ DatabagItemSchema = JSONSchema(
         raw_data={ str: None }))
     
 EnvironmentCookbookVersionsSchema = JSONSchema(dict(run_list=[str]))
+SandboxSchema = JSONSchema(dict(checksums={str:None}))

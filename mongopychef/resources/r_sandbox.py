@@ -38,9 +38,8 @@ class SandboxFile(Resource):
         self.__parent__ = parent
         self.__name__ = checksum
         self.request = parent.request
-        self.file = parent.sandbox.get_file(checksum)
-        if self.item is None:
-            raise exc.HTTPNotFound()
+        self.sandbox = parent.sandbox
+        self.checksum = checksum
             
     def __repr__(self):
         return '<SandboxFile %s => %s>' % (
