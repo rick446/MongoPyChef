@@ -24,9 +24,9 @@ node = collection(
 
 class Node(object):
 
-    def url(self):
+    def url(self, request):
         return request.relative_url(
-            config.chef_api_root + '/nodes/' + self.name)
+            '/nodes/' + self.name)
 
     def __json__(self):
         return dict(
