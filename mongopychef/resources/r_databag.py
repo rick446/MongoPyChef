@@ -36,7 +36,7 @@ class Databag(object):
         return False
         
     def __getitem__(self, name):
-        return Databag(self.request, self, name)
+        return Databag(self, name)
 
     def __repr__(self):
         return '<Databag %s>' % self.databag.name
