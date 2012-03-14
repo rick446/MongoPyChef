@@ -1,3 +1,5 @@
+from json import dumps
+
 from webob import exc
 from pymongo.errors import DuplicateKeyError
 
@@ -5,6 +7,7 @@ from pyramid.view import view_config
 
 from ..resources import Databags, Databag, DatabagItem
 from .. import model as M
+from ..lib import validators as V
 
 @view_config(
     context=Databags,
@@ -32,6 +35,61 @@ def create_databag(request):
     return dict(
         uri=cli.url(request),
         private_key=key.exportKey())
+
+@view_config(
+    context=Databag,
+    renderer='json',
+    request_method='GET',
+    permission='read')
+def read_databag(context, request):
+    return dict(
+        (dbi.id, dbi.url(request))
+        for dbi in context.databag.items)
+
+@view_config(
+    context=Databag,
+    renderer='json',
+    request_method='POST',
+    permission='create')
+def create_databag_item(context, request):
+    data = V.DatabagItemSchema.to_python(request.json, None)
+    raw_data = data['raw_data']
+    dbi = context.databag.create_item(raw_data['id'], data=dumps(raw_data))
+    try:
+        M.orm_session.flush(dbi)
+    except DuplicateKeyError:
+        raise exc.HTTPConflict()
+    return dict(uri=dbi.url(request))
+
+@view_config(
+    context=DatabagItem,
+    renderer='json',
+    request_method='GET',
+    permission='read')
+def read_databag_item(context, request):
+    return context.item.__json__()
+
+@view_config(
+    context=DatabagItem,
+    renderer='json',
+    request_method='PUT',
+    permission='update')
+def update_databag_item(context, request):
+    data = V.DatabagItemSchema.to_python(request.json, None)
+    raw_data = data['raw_data']
+    assert raw_data['_id'] == context.item.id
+    context.item.data = dumps(raw_data)
+    return context.item.data
+
+@view_config(
+    context=DatabagItem,
+    renderer='json',
+    request_method='DELETE',
+    permission='delete')
+def delete_databag_item(context, request):
+    context.item.delete()
+    return context.item.data
+
 
 
 
