@@ -365,53 +365,29 @@ class TestDatabag(ChefTest):
                 raw_data={'id':'test-item'}))
         assert result['status'].startswith('409')
 
-    if False:
+    def test_get_item_ok(self):
+        result = self.chef_user_1.api_request('GET', '/data/test-bag/test-item')
+        self.assertEqual(result, {
+                "data": "bar", "id": "test-item"})
 
-        def test_get_bag_ok(self):
-            result = self.chef_user_1.api_request('GET', '/data/test-bag')
-            self.assertEqual(result, {
-                    u'test-item': u'http://test/data/test-bag/test-item/'})
+    @expect_errors([404])
+    def test_get_item_404(self):
+        result = self.chef_user_1.api_request('GET', '/data/test-bag/does-not-exist')
+        self.assert_(result['status'].startswith('404'))
 
-        @expect_errors([404])
-        def test_get_bag_404(self):
-            result = self.chef_user_1.api_request('GET', '/data/test-bag-does-not-exist')
-            self.assert_(result['status'].startswith('404'))
+    def test_put_item_ok(self):
+        result = self.chef_1_validator.api_request(
+            'PUT', '/data/test-bag/test-item', data=dict(
+                name='test-item',
+                raw_data={'id':'test-item', 'data':'baz'}))
+        self.assertEqual(result, {
+                "data": "baz", "id": "test-item"})
 
-    # @expect_errors([404])
-    # def test_get_404(self):
-    #     result = self.chef_1_validator.api_request(
-    #         'GET', '/nodes/does-not-exist')
-    #     self.assert_(result['status'].startswith('404'))
-        
-    # def test_put_ok(self):
-    #     result = self.chef_1_validator.api_request(
-    #         'PUT', '/nodes/test-node', data=dict(
-    #             name='test-node',
-    #             normal={'a':5}))
-    #     self.assertEqual(result, {
-    #             u'name': u'test-node',
-    #             u'chef_type': u'node',
-    #             u'json_class': u'Chef::Node',
-    #             u'chef_environment': u'_default',
-    #             u'run_list': [],
-    #             u'normal': {'a':5},
-    #             u'default': {},
-    #             u'override': {},
-    #             u'automatic': {}})
-        
-    # def test_delete_ok(self):
-    #     result = self.chef_1_validator.api_request(
-    #         'DELETE', '/nodes/test-node')
-    #     self.assertEqual(result, {
-    #             u'name': u'test-node',
-    #             u'chef_type': u'node',
-    #             u'json_class': u'Chef::Node',
-    #             u'chef_environment': u'_default',
-    #             u'run_list': [],
-    #             u'normal': {},
-    #             u'default': {},
-    #             u'override': {},
-    #             u'automatic': {}})
+    def test_delete_item_ok(self):
+        result = self.chef_1_validator.api_request(
+            'DELETE', '/data/test-bag/test-item/')
+        self.assertEqual(result, {
+                "data": "bar", "id": "test-item"})
 
 class TestRole(TestCase):
     pass

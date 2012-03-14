@@ -65,7 +65,7 @@ def create_databag_item(context, request):
     request_method='GET',
     permission='read')
 def read_databag_item(context, request):
-    return context.item.__json__()
+    return context.__json__()
 
 @view_config(
     context=M.DatabagItem,
@@ -75,9 +75,9 @@ def read_databag_item(context, request):
 def update_databag_item(context, request):
     data = V.DatabagItemSchema.to_python(request.json, None)
     raw_data = data['raw_data']
-    assert raw_data['_id'] == context.item.id
-    context.item.data = dumps(raw_data)
-    return context.item.data
+    assert raw_data['id'] == context.id
+    context.data = dumps(raw_data)
+    return context.__json__()
 
 @view_config(
     context=M.DatabagItem,
@@ -85,8 +85,8 @@ def update_databag_item(context, request):
     request_method='DELETE',
     permission='delete')
 def delete_databag_item(context, request):
-    context.item.delete()
-    return context.item.data
+    context.delete()
+    return context.__json__()
 
 
 

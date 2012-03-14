@@ -1,5 +1,5 @@
 import logging
-from json import dumps
+from json import dumps, loads
 
 from webob import exc
 
@@ -39,7 +39,6 @@ class Databag(ModelBase):
             DatabagItem, databag_id=self._id, id=name)
         if obj is None:
             raise exc.HTTPNotFound()
-        obj.__name__ = name
         obj.__parent__ = self
         return obj
 
@@ -56,6 +55,9 @@ class DatabagItem(ModelBase):
     @property
     def __name__(self):
         return self.id
+
+    def __json__(self):
+        return loads(self.data)
     
 orm_session.mapper(Databag, databag, properties=dict(
         account_id=ForeignIdProperty('Account'),
