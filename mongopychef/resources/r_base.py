@@ -39,12 +39,12 @@ class ResourceCollection(object):
         obj.__parent__ = self
         return obj
 
-    def _decorate_object(self, obj):
+    def decorate_child(self, obj):
         obj.__parent__ = self
         return obj
 
     def find(self, *args, **kwargs):
-        kwargs.setdefault('decorate', self._decorate_object)
+        kwargs.setdefault('decorate', self.decorate_child)
         return self.account.find_objects(
             self.__model__, *args, **kwargs)
 

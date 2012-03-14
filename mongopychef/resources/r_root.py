@@ -3,7 +3,6 @@ from .r_base import ResourceCollection
 from .. import model as M
 
 from .r_cookbook import Cookbooks
-from .r_databag import Databags
 from .r_environment import Environments
 from .r_search import Search
 from .r_sandbox import Sandboxes
@@ -11,6 +10,10 @@ from .r_sandbox import Sandboxes
 class Clients(ResourceCollection):
     __name__ = 'clients'
     __model__ = M.Client
+
+class Databags(ResourceCollection):
+    __name__ = 'data'
+    __model__ = M.Databag
 
 class Nodes(ResourceCollection):
     __name__ = 'nodes'

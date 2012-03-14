@@ -9,8 +9,7 @@ from Crypto.PublicKey import RSA
 from pyramid import testing
 
 from mongopychef import main
-
-from . import model as M
+from mongopychef import model as M
 
 user_1_key = RSA.generate(1536)
 user_2_key = RSA.generate(1536)
@@ -315,18 +314,114 @@ class TestNode(ChefTest):
                 u'override': {},
                 u'automatic': {}})
 
-class TestCookbook(TestCase):
-    pass
+class TestDatabag(ChefTest):
 
-class TestData(TestCase):
-    pass
+    def setUp(self):
+        super(TestDatabag, self).setUp()
+        bag = M.Databag(account_id=self.a1._id, name='test-bag')
+        bag.new_object(id='test-item', data='bar')
+        M.orm_session.flush()
+        M.orm_session.clear()
 
-class TestEnvironment(TestCase):
-    pass
+    def test_list_bags(self):
+        result = self.chef_user_1.api_request('GET', '/data')
+        self.assertEqual(result, {u'test-bag': u'http://test/data/test-bag/'})
+
+    def test_new_bag_ok(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/data', data=dict(name='test-bag-2'))
+        self.assertEqual(result, {
+                'uri': u'http://test/data/test-bag-2/'})
+
+    @expect_errors([409])
+    def test_new_bag_duplicate(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/data', data=dict(name='test-bag'))
+        assert result['status'].startswith('409')
+
+    def test_get_bag_ok(self):
+        result = self.chef_user_1.api_request('GET', '/data/test-bag')
+        self.assertEqual(result, {
+                u'test-item': u'http://test/data/test-bag/test-item/'})
+
+    @expect_errors([404])
+    def test_get_bag_404(self):
+        result = self.chef_user_1.api_request('GET', '/data/test-bag-does-not-exist')
+        self.assert_(result['status'].startswith('404'))
+
+    def test_new_item_ok(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/data/test-bag', data=dict(
+                name='test-item-2',
+                raw_data={'id': 'test-item-2', 'other': 'foo'}))
+        self.assertEqual(result, {
+                u'uri': u'http://test/data/test-bag/test-item-2/'})
+
+    @expect_errors([409])
+    def test_new_item_duplicate(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/data/test-bag', data=dict(
+                name='test-item',
+                raw_data={'id':'test-item'}))
+        assert result['status'].startswith('409')
+
+    if False:
+
+        def test_get_bag_ok(self):
+            result = self.chef_user_1.api_request('GET', '/data/test-bag')
+            self.assertEqual(result, {
+                    u'test-item': u'http://test/data/test-bag/test-item/'})
+
+        @expect_errors([404])
+        def test_get_bag_404(self):
+            result = self.chef_user_1.api_request('GET', '/data/test-bag-does-not-exist')
+            self.assert_(result['status'].startswith('404'))
+
+    # @expect_errors([404])
+    # def test_get_404(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'GET', '/nodes/does-not-exist')
+    #     self.assert_(result['status'].startswith('404'))
+        
+    # def test_put_ok(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'PUT', '/nodes/test-node', data=dict(
+    #             name='test-node',
+    #             normal={'a':5}))
+    #     self.assertEqual(result, {
+    #             u'name': u'test-node',
+    #             u'chef_type': u'node',
+    #             u'json_class': u'Chef::Node',
+    #             u'chef_environment': u'_default',
+    #             u'run_list': [],
+    #             u'normal': {'a':5},
+    #             u'default': {},
+    #             u'override': {},
+    #             u'automatic': {}})
+        
+    # def test_delete_ok(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'DELETE', '/nodes/test-node')
+    #     self.assertEqual(result, {
+    #             u'name': u'test-node',
+    #             u'chef_type': u'node',
+    #             u'json_class': u'Chef::Node',
+    #             u'chef_environment': u'_default',
+    #             u'run_list': [],
+    #             u'normal': {},
+    #             u'default': {},
+    #             u'override': {},
+    #             u'automatic': {}})
 
 class TestRole(TestCase):
     pass
 
 class TestSandbox(TestCase):
+    pass
+
+class TestCookbook(TestCase):
+    pass
+
+class TestEnvironment(TestCase):
     pass
 

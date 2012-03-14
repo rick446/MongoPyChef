@@ -5,6 +5,10 @@ class ModelBase(object):
     def allow_access(self, client, permission):
         return permission == 'read' or client.admin
 
+    def decorate_child(self, obj):
+        obj.__parent__ = self
+        return obj
+
 class CookbookFile(S.Object):
 
     def __init__(self):

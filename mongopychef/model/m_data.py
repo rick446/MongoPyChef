@@ -1,4 +1,5 @@
 import logging
+from json import dumps
 
 from webob import exc
 
@@ -27,8 +28,12 @@ databag_item = collection(
     Field('data', str),
     Index('account_id', 'databag_id', 'id', unique=True))
 
-class Databag(ModelBase): 
+class Databag(ModelBase):
 
+    @property
+    def __name__(self):
+        return self.name
+    
     def __getitem__(self, name):
         obj = self.account.get_object(
             DatabagItem, databag_id=self._id, id=name)
@@ -38,8 +43,20 @@ class Databag(ModelBase):
         obj.__parent__ = self
         return obj
 
-class DatabagItem(ModelBase):  pass
+    def new_object(self, **data):
+        return self.decorate_child(
+            DatabagItem(
+                account_id=self.account_id,
+                databag_id=self._id,
+                id=data['id'],
+                data=dumps(data)))
 
+class DatabagItem(ModelBase):  
+
+    @property
+    def __name__(self):
+        return self.id
+    
 orm_session.mapper(Databag, databag, properties=dict(
         account_id=ForeignIdProperty('Account'),
         account=RelationProperty('Account'),

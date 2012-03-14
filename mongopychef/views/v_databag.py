@@ -16,8 +16,7 @@ from ..lib import validators as V
     permission='read')
 def list_databags(context, request):
     return dict(
-        (obj.name, request.resource_url(obj))
-        for obj in request.account.find_objects(M.Client))
+        (obj.name, request.resource_url(obj)) for obj in context.find())
 
 @view_config(
     context=Databags,
@@ -26,14 +25,13 @@ def list_databags(context, request):
     permission='add')
 def create_databag(context, request):
     data = V.DatabagSchema.to_python(request.json, None)
-    bag = context.new_object(
-        M.Databag, name=data['name'])
+    bag = context.new_object(name=data['name'])
     try:
         M.orm_session.flush(bag)
     except DuplicateKeyError:
         M.orm_session.expunge(bag)
         raise exc.HTTPConflict()
-    return dict(uri=request.resource_path(bag))
+    return dict(uri=request.resource_url(bag))
 
 @view_config(
     context=M.Databag,
@@ -41,9 +39,9 @@ def create_databag(context, request):
     request_method='GET',
     permission='read')
 def read_databag(context, request):
+    items = map(context.decorate_child, context.items)
     return dict(
-        (dbi.id, request.resource_url(dbi))
-        for dbi in context.databag.items)
+        (dbi.id, request.resource_url(dbi)) for dbi in items)
 
 @view_config(
     context=M.Databag,
@@ -53,12 +51,13 @@ def read_databag(context, request):
 def create_databag_item(context, request):
     data = V.DatabagItemSchema.to_python(request.json, None)
     raw_data = data['raw_data']
-    dbi = context.create_item(raw_data['id'], data=dumps(raw_data))
+    dbi = context.new_object(**raw_data)
     try:
         M.orm_session.flush(dbi)
     except DuplicateKeyError:
+        M.orm_session.expunge(dbi)
         raise exc.HTTPConflict()
-    return dict(uri=dbi.url(request))
+    return dict(uri=request.resource_url(dbi))
 
 @view_config(
     context=M.DatabagItem,
