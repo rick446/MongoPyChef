@@ -28,8 +28,10 @@ class Client(Resource):
 
     def allow_access(self, permission):
         if permission == 'delete':
-            return (self.request.client.admin
-                    and self.request.client is not self.client)
+            return (
+                self.request.client.admin
+                and self.request.client is not self.client
+                and not self.client.is_validator)
         return super(Client, self).allow_access(permission)
         
     def __repr__(self):
