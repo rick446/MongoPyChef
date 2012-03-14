@@ -1,17 +1,13 @@
 from webob import exc
 from .. import model as M
+from .r_base import Resource
 
-class Databags(object):
+class Databags(Resource):
     __name__ = 'databags'
 
     def __init__(self, request, parent):
         self.request = request
         self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __getitem__(self, name):
         return Databag(self, name)
@@ -19,7 +15,7 @@ class Databags(object):
     def __repr__(self):
         return '<Databags>'
 
-class Databag(object):
+class Databag(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -29,11 +25,6 @@ class Databag(object):
             M.Databag, name=name)
         if self.databag is None:
             raise exc.HTTPNotFound()
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
         
     def __getitem__(self, name):
         return Databag(self, name)
@@ -41,7 +32,7 @@ class Databag(object):
     def __repr__(self):
         return '<Databag %s>' % self.databag.name
 
-class DatabagItem(object):
+class DatabagItem(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -51,11 +42,6 @@ class DatabagItem(object):
         if self.item is None:
             raise exc.HTTPNotFound()
             
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-        
     def __repr__(self):
         return '<DatabagItem %s => %s>' % (
             self.__parent__.__name__, self.__name__)

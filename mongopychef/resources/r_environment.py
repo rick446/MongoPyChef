@@ -1,17 +1,13 @@
 from webob import exc
 from .. import model as M
+from .r_base import Resource
 
-class Environments(object):
+class Environments(Resource):
     __name__ = 'environments'
 
     def __init__(self, request, parent):
         self.request = request
         self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __getitem__(self, name):
         return Environment(self, name)
@@ -19,7 +15,7 @@ class Environments(object):
     def __repr__(self):
         return '<Environments>'
 
-class Environment(dict):
+class Environment(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -30,15 +26,10 @@ class Environment(dict):
         self['cookbooks'] = EnvironmentCookbooks(self)
         self['cookbook_versions'] = EnvironmentCookbookVersions(self)
 
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-
     def __repr__(self):
         return '<Environment %s>' % self.__name__
 
-class EnvironmentCookbooks(object):
+class EnvironmentCookbooks(Resource):
     __name__ = 'cookbooks'
 
     def __init__(self, parent):
@@ -46,18 +37,13 @@ class EnvironmentCookbooks(object):
         self.request = parent.request
         self.environment = parent.envrionment
 
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-
     def __getitem__(self, name):
         return EnvironmentCookbook(self, name)
 
     def __repr__(self):
         return '<EnvironmentCookbooks %s>' % self.environment.name
 
-class EnvironmentCookbook(dict):
+class EnvironmentCookbook(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -66,16 +52,11 @@ class EnvironmentCookbook(dict):
         self.environment = parent.environment
         self.name = name
 
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-
     def __repr__(self):
         return '<EnvironmentCookbook %s => %s>' % (
             self.environment.name, self.__name__)
 
-class EnvironmentCookbookVersions(object):
+class EnvironmentCookbookVersions(Resource):
     __name__ = 'cookbook_versions'
 
     def __init__(self, parent):
@@ -83,15 +64,10 @@ class EnvironmentCookbookVersions(object):
         self.request = parent.request
         self.environment = parent.envrionment
 
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-
     def __repr__(self):
         return '<EnvironmentCookbookVersions %s>' % self.environment.name
 
-class EnvironmentCookbook(dict):
+class EnvironmentCookbook(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -99,11 +75,6 @@ class EnvironmentCookbook(dict):
         self.request = parent.request
         self.environment = parent.environment
         self.name = name
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __repr__(self):
         return '<EnvironmentCookbook %s => %s>' % (

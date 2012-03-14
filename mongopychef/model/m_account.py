@@ -40,9 +40,12 @@ class Account(object):
         return a, (admins, engineers, users)
 
     def get_object(self, cls, **kwargs):
-        return cls.query.get(
-            account_id=self._id,
-            **kwargs)
+        return cls.query.get(account_id=self._id, **kwargs)
+
+    def find_objects(self, cls, *args, **kwargs):
+        if len(args) == 0: args = ({},)
+        args[0]['account_id'] = self._id
+        return cls.query.find(*args, **kwargs)
 
     def allow_access(self, permission, user):
         from .m_auth import Group

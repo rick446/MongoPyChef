@@ -10,8 +10,10 @@ from .. import model as M
 from ..lib import validators as V
 
 @view_config(
-    context=Cookbooks, renderer='json',
-    request_method='GET', permission='view')
+    context=Cookbooks,
+    renderer='json',
+    request_method='GET',
+    permission='read')
 def list_cookbooks(context, request):
     num_versions = V.NodeSchema().to_python(
         request.params.get('num_versions', 1), None)
@@ -30,8 +32,10 @@ def list_cookbooks(context, request):
     return result
 
 @view_config(
-    context=Cookbook, renderer='json',
-    request_method='GET', permission='view')
+    context=Cookbook,
+    renderer='json',
+    request_method='GET',
+    permission='read')
 def view_cookbook(context, request):
     num_versions = V.NodeSchema().to_python(
         request.params.get('num_versions', 1), None)
@@ -51,14 +55,18 @@ def view_cookbook(context, request):
                 for cb in cookbooks ]))
 
 @view_config(
-    context=CookbookVersion, renderer='json',
-    request_method='GET', permission='view')
+    context=CookbookVersion,
+    renderer='json',
+    request_method='GET',
+    permission='read')
 def view_cookbook_version(context, request):
     return context.cookbook_version.__json__()
 
 @view_config(
-    context=CookbookVersion, renderer='json',
-    request_method='PUT', permission='edit')
+    context=CookbookVersion,
+    renderer='json',
+    request_method='PUT',
+    permission='update')
 def update_cookbook_version(context, request):
     M.CookbookVersion.query.remove(dict(
         account_id=request.account._id,
@@ -72,8 +80,10 @@ def update_cookbook_version(context, request):
     return {}
 
 @view_config(
-    context=CookbookVersion, renderer='json',
-    request_method='DELETE', permission='delete')
+    context=CookbookVersion,
+    renderer='json',
+    request_method='DELETE',
+    permission='delete')
 def delete_cookbook_version(context, request):
     M.CookbookVersion.query.remove(dict(
         account_id=request.account._id,

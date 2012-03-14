@@ -1,17 +1,13 @@
 from webob import exc
 from .. import model as M
+from .r_base import Resource
 
-class Roles(object):
+class Roles(Resource):
     __name__ = 'roles'
 
     def __init__(self, request, parent):
         self.request = request
         self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __getitem__(self, name):
         return Role(self, name)
@@ -19,7 +15,7 @@ class Roles(object):
     def __repr__(self):
         return '<Roles>'
 
-class Role(object):
+class Role(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -29,11 +25,6 @@ class Role(object):
             M.Role, name=name)
         if self.role is None:
             raise exc.HTTPNotFound()
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __repr__(self):
         return '<Role %s>' % self.__name__

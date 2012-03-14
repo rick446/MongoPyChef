@@ -1,17 +1,13 @@
 from webob import exc
 from .. import model as M
+from .r_base import Resource
 
-class Nodes(object):
+class Nodes(Resource):
     __name__ = 'nodes'
 
     def __init__(self, request, parent):
         self.request = request
         self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __getitem__(self, name):
         return Node(self, name)
@@ -19,22 +15,17 @@ class Nodes(object):
     def __repr__(self):
         return '<Nodes>'
 
-class Node(dict):
+class Node(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
         self.request = parent.request
-        self.node = parent.request.account.get_item(
+        self.node = parent.request.account.get_object(
             M.Node, name=name)
         if self.node is None:
             raise exc.HTTPNotFound()
 
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
-        
     def __repr__(self):
         return '<Node %s>' % self.__name__
 

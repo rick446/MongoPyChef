@@ -1,17 +1,13 @@
 from webob import exc
 from .. import model as M
+from .r_base import Resource
 
-class Clients(object):
+class Clients(Resource):
     __name__ = 'clients'
 
     def __init__(self, request, parent):
         self.request = request
         self.__parent__ = parent
-
-    def allow_access(self, permission):
-        if permission == 'view': return True
-        if self.request.client.admin: return True
-        return False
 
     def __getitem__(self, name):
         return Client(self, name)
@@ -19,7 +15,7 @@ class Clients(object):
     def __repr__(self):
         return '<Clients>'
 
-class Client(object):
+class Client(Resource):
 
     def __init__(self, parent, name):
         self.__parent__ = parent
@@ -31,9 +27,10 @@ class Client(object):
             raise exc.HTTPNotFound()
 
     def allow_access(self, permission):
-        if self.request.client.admin: return True
-        if self.request.client._id == self.client._id: return True
-        return False
+        if permission == 'delete':
+            return (self.request.client.admin
+                    and self.request.client is not self.client)
+        return super(Client, self).allow_access(permission)
         
     def __repr__(self):
         if self.client:
