@@ -12,26 +12,25 @@ from ..lib import validators as V
     renderer='json',
     request_method='GET',
     permission='read')
-def list_nodes(request):
+def list_nodes(context, request):
     return dict(
-        (n.name, n.url(request))
-        for n in M.Node.query.find(dict(
-                account_id=request.account._id)))
+        (n.name, request.resource_url(n)) for n in context.find())
 
 @view_config(
     context=Nodes,
     renderer='json',
     request_method='POST',
     permission='create')
-def create_node(request):
-    n = M.Node(account_id=request.account._id)
-    n.update(V.NodeSchema().to_python(request.json, None))
+def create_node(context, request):
+    data = V.NodeSchema().to_python(request.json, None)
+    n = context.new_object(name=data['name'])
+    n.update(data)
     try:
         M.orm_session.flush(n)
     except DuplicateKeyError:
         M.orm_session.expunge(n)
         raise exc.HTTPConflict()
-    return dict(uri=n.url(request))
+    return dict(uri=request.resource_url(n))
 
 @view_config(
     context=M.Node,

@@ -25,9 +25,9 @@ node = collection(
 
 class Node(ModelBase):
 
-    def url(self, request):
-        return request.relative_url(
-            '/nodes/' + self.name)
+    @property
+    def __name__(self):
+        return self.name
 
     def __json__(self):
         return dict(

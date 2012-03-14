@@ -16,7 +16,7 @@ from ..lib import validators as V
     permission='read')
 def list_databags(context, request):
     return dict(
-        (obj.name, obj.url(request))
+        (obj.name, request.resource_url(obj))
         for obj in request.account.find_objects(M.Client))
 
 @view_config(
@@ -24,17 +24,16 @@ def list_databags(context, request):
     renderer='json',
     request_method='POST',
     permission='add')
-def create_databag(request):
-    cli, key = M.Client.generate(
-        request.client.principal, **request.json)
+def create_databag(context, request):
+    data = V.DatabagSchema.to_python(request.json, None)
+    bag = context.new_object(
+        M.Databag, name=data['name'])
     try:
-        M.orm_session.flush(cli)
+        M.orm_session.flush(bag)
     except DuplicateKeyError:
-        M.orm_session.expunge(cli)
+        M.orm_session.expunge(bag)
         raise exc.HTTPConflict()
-    return dict(
-        uri=cli.url(request),
-        private_key=key.exportKey())
+    return dict(uri=request.resource_path(bag))
 
 @view_config(
     context=M.Databag,
@@ -43,7 +42,7 @@ def create_databag(request):
     permission='read')
 def read_databag(context, request):
     return dict(
-        (dbi.id, dbi.url(request))
+        (dbi.id, request.resource_url(dbi))
         for dbi in context.databag.items)
 
 @view_config(
@@ -54,7 +53,7 @@ def read_databag(context, request):
 def create_databag_item(context, request):
     data = V.DatabagItemSchema.to_python(request.json, None)
     raw_data = data['raw_data']
-    dbi = context.databag.create_item(raw_data['id'], data=dumps(raw_data))
+    dbi = context.create_item(raw_data['id'], data=dumps(raw_data))
     try:
         M.orm_session.flush(dbi)
     except DuplicateKeyError:

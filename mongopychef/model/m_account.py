@@ -44,6 +44,9 @@ class Account(object):
     def get_object(self, cls, **kwargs):
         return cls.query.get(account_id=self._id, **kwargs)
 
+    def new_object(self, cls, **kwargs):
+        return cls(account_id=self._id, **kwargs)
+
     def find_objects(self, cls, *args, **kwargs):
         if len(args) == 0: args = ({},)
         args[0]['account_id'] = self._id

@@ -66,10 +66,6 @@ class Sandbox(ModelBase):
     def file_id(self, checksum):
         return str(self.account_id) + '/' + checksum
 
-    def url(self, request):
-        return request.relative_url(
-            '/sandboxes/' + self._id)
-
     def upload(self, checksum, ifp):
         _id = str(self.account._id) + '/' + checksum
         chef_file.m.fs.delete(_id)

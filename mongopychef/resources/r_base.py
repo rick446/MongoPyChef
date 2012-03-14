@@ -30,9 +30,23 @@ class ResourceCollection(object):
                     self.__model__, **{ self.key_property: name })
             else:
                 raise exc.HTTPNotFound()
-        obj.__name__ = name
         obj.__parent__ = self
         return obj
+
+    def new_object(self, **kw):
+        obj = self.account.new_object(
+            self.__model__, **kw)
+        obj.__parent__ = self
+        return obj
+
+    def _decorate_object(self, obj):
+        obj.__parent__ = self
+        return obj
+
+    def find(self, *args, **kwargs):
+        kwargs.setdefault('decorate', self._decorate_object)
+        return self.account.find_objects(
+            self.__model__, *args, **kwargs)
 
     def __repr__(self):
         return '<%s>' % self.__class__.__name__

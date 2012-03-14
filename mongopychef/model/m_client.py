@@ -25,6 +25,10 @@ client = collection(
 
 class Client(ModelBase):
 
+    @property
+    def __name__(self):
+        return self.name
+
     def allow_access(self, client, permission):
         if permission == 'delete':
             return (
@@ -93,10 +97,6 @@ class Client(ModelBase):
         if self.user:
             return self.account.allow_access('admin', user=self.user)
         return self._admin
-
-    def url(self, request):
-        return request.relative_url(
-            '/clients/' + self.name)
 
     @LazyProperty
     def principal(self):

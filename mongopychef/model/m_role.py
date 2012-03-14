@@ -24,10 +24,6 @@ role = collection(
 
 class Role(ModelBase):
 
-    def url(self, request):
-        return request.relative_url(
-            '/roles/' + self.name)
-
     def __json__(self):
         return dict(
             chef_type='role',

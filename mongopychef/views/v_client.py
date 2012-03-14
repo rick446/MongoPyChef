@@ -13,23 +13,24 @@ from .. import model as M
     permission='read')
 def list_clients(request):
     return dict(
-        (cli.name, cli.url(request))
+        (cli.name, request.resource_url(cli))
         for cli in M.Client.query.find(dict(account_id=request.account._id)))
 
 @view_config(context=Clients,
              renderer='json',
              request_method='POST',
              permission='create')
-def create_client(request):
+def create_client(context, request):
     cli, key = M.Client.generate(
         request.client.principal, **request.json)
+    cli.__parent__ = context
     try:
         M.orm_session.flush(cli)
     except DuplicateKeyError:
         M.orm_session.expunge(cli)
         raise exc.HTTPConflict()
     return dict(
-        uri=cli.url(request),
+        uri=request.resource_url(cli),
         private_key=key.exportKey())
 
 @view_config(

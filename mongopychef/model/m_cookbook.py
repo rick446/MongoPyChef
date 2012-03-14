@@ -40,9 +40,6 @@ class CookbookVersion(ModelBase):
         return request.relative_url(
             '/cookbooks/' + name)
 
-    def url(self, request):
-        return self.cookbook_url(request, self.name) + '/' + self.version
-
     def __json__(self):
         return dict(
             json_class='Chef::CookbookVersion',

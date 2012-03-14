@@ -29,10 +29,6 @@ databag_item = collection(
 
 class Databag(ModelBase): 
 
-    def url(self, request):
-        return request.relative_url(
-            '/data/' + self.name)
-
     def __getitem__(self, name):
         obj = self.account.get_object(
             DatabagItem, databag_id=self._id, id=name)
@@ -42,10 +38,7 @@ class Databag(ModelBase):
         obj.__parent__ = self
         return obj
 
-class DatabagItem(ModelBase): 
-
-    def url(self):
-        return self.databag.url() + '/' + self.id
+class DatabagItem(ModelBase):  pass
 
 orm_session.mapper(Databag, databag, properties=dict(
         account_id=ForeignIdProperty('Account'),
