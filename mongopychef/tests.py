@@ -1,6 +1,6 @@
 import urllib2
 from cStringIO import StringIO
-from unittest import TestCase, main
+from unittest import TestCase
 
 import chef
 import webtest
@@ -330,5 +330,3 @@ class TestRole(TestCase):
 class TestSandbox(TestCase):
     pass
 
-if __name__ == '__main__':
-    main()

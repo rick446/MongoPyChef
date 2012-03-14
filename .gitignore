@@ -1,0 +1,3 @@
+*.pem
+.coverage
+*.egg-info
