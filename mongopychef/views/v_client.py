@@ -57,11 +57,6 @@ def put_client(context, request):
     request_method='DELETE',
     permission='delete')
 def delete_client(context, request):
-    cli = context.client
-    if cli == request.client:
-        raise exc.HTTPForbidden()
-    elif cli.is_validator:
-        raise exc.HTTPForbidden()
-    cli.delete()
+    context.client.delete()
     return {}
 
