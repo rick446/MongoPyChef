@@ -53,15 +53,15 @@ class Environment(object):
             return ( cb for cb in iter if cb.version == version)
 
     def get_cookbook_versions(self, run_list=None):
-        from arden.chef import model as CM
-        from arden.chef.lib.runlist import expand_runlist
+        from .m_cookbook import CookbookVersion
+        from ..lib.runlist import expand_runlist
         if run_list is None:
-            q = CM.CookbookVersion.query.find(dict(
+            q = CookbookVersion.query.find(dict(
                     account_id=self.account_id))
         else:
             cookbook_names = list(expand_runlist(
                     self.account._id, run_list, self))
-            q = CM.CookbookVersion.query.find(dict(
+            q = CookbookVersion.query.find(dict(
                     account_id=self.account_id,
                     name={'$in':cookbook_names}))
         result = {}

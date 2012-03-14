@@ -125,7 +125,7 @@ def read_environment_cookbook(context, request):
 def get_cookbook_versions(context, request):
     if context.environment is None:
         raise exc.HTTPNotFound()
-    data = V.EnvironmentCookbookVersions.to_python(request.json, None)
+    data = V.EnvironmentCookbookVersionsSchema.to_python(request.json, None)
     result = context.environment.get_cookbook_versions(data['run_list'])
     return result
 

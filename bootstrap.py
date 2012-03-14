@@ -32,6 +32,7 @@ def flush_context():
 with flush_context():
     account, groups = M.Account.bootstrap(shortname=shortname)
     account.name = name
+    M.Environment(account_id=account._id, name='_default')
     client, private = M.Client.generate(account, admin=True)
     print 'Validator key saved in  %s-validator.pem' % (account.shortname)
     with open('%s-validator.pem' % account.shortname, 'wb') as fp:

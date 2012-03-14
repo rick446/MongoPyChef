@@ -20,8 +20,9 @@ class Environment(Resource):
     def __init__(self, parent, name):
         self.__parent__ = parent
         self.__name__ = name
+        self.name = name
         self.request = parent.request
-        self.environment = parent.request.account.get_item(
+        self.environment = parent.request.account.get_object(
             M.Environment, name=name)
         self['cookbooks'] = EnvironmentCookbooks(self)
         self['cookbook_versions'] = EnvironmentCookbookVersions(self)
@@ -35,7 +36,7 @@ class EnvironmentCookbooks(Resource):
     def __init__(self, parent):
         self.__parent__ = parent
         self.request = parent.request
-        self.environment = parent.envrionment
+        self.environment = parent.environment
 
     def __getitem__(self, name):
         return EnvironmentCookbook(self, name)
@@ -61,9 +62,10 @@ class EnvironmentCookbookVersions(Resource):
 
     def __init__(self, parent):
         self.__parent__ = parent
+        self.parent = parent
         self.request = parent.request
-        self.environment = parent.envrionment
+        self.environment = parent.environment
 
     def __repr__(self):
-        return '<EnvironmentCookbookVersions %s>' % self.environment.name
+        return '<EnvironmentCookbookVersions %s>' % self.parent.name
 
