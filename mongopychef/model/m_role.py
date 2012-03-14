@@ -5,6 +5,7 @@ from ming import collection, Field, Index
 from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 
 log = logging.getLogger(__name__)
@@ -21,11 +22,11 @@ role = collection(
     Field('env_run_lists', { str: [ str ]}),
     Index('account_id', 'name', unique=True))
 
-class Role(object):
+class Role(ModelBase):
 
-    def url(self):
+    def url(self, request):
         return request.relative_url(
-            config.chef_api_root + '/roles/' + self.name)
+            '/roles/' + self.name)
 
     def __json__(self):
         return dict(

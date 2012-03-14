@@ -5,6 +5,7 @@ from ming import collection, Field, Index
 from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 
 log = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ node = collection(
     Field('run_list', [ str ] ),
     Index('account_id', 'name', unique=True))
 
-class Node(object):
+class Node(ModelBase):
 
     def url(self, request):
         return request.relative_url(

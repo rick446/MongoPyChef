@@ -8,6 +8,7 @@ from ming import schema as S
 from ming.odm import RelationProperty, ForeignIdProperty, Mapper
 from ming.utils import LazyProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 
 log = logging.getLogger(__name__)
@@ -22,7 +23,15 @@ client = collection(
     Field('is_validator', bool, if_missing=False),
     Field('_admin', bool, if_missing=False))
 
-class Client(object):
+class Client(ModelBase):
+
+    def allow_access(self, client, permission):
+        if permission == 'delete':
+            return (
+                client.admin
+                and client is not self
+                and not self.is_validator)
+        return super(Client, self).allow_access(client, permission)
 
     def regenerate_key(self, strength=2048):
         private = RSA.generate(strength)

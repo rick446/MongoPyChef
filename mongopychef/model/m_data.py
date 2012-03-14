@@ -1,9 +1,12 @@
 import logging
 
+from webob import exc
+
 from ming import collection, Field, Index
 from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 
 log = logging.getLogger(__name__)
@@ -24,19 +27,22 @@ databag_item = collection(
     Field('data', str),
     Index('account_id', 'databag_id', 'id', unique=True))
 
-class Databag(object): 
+class Databag(ModelBase): 
 
     def url(self, request):
         return request.relative_url(
             '/data/' + self.name)
 
-    def get_item(self, name):
-        return DatabagItem.query.get(
-            account_id=self.account_id,
-            databag_id=self._id,
-            id=name)
+    def __getitem__(self, name):
+        obj = self.account.get_object(
+            DatabagItem, databag_id=self._id, id=name)
+        if obj is None:
+            raise exc.HTTPNotFound()
+        obj.__name__ = name
+        obj.__parent__ = self
+        return obj
 
-class DatabagItem(object): 
+class DatabagItem(ModelBase): 
 
     def url(self):
         return self.databag.url() + '/' + self.id

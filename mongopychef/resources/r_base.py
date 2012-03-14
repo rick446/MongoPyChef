@@ -1,4 +1,4 @@
 class Resource(dict):
 
-    def allow_access(self, permission):
-        return permission == 'read' or self.request.client.admin
+    def allow_access(self, client, permission):
+        return permission == 'read' or client.admin

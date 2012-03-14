@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Roles, Role
+from ..resources import Roles
 from .. import model as M
 from ..lib import validators as V
 
@@ -34,7 +34,7 @@ def create_role(request):
     return dict(uri=n.url(request))
 
 @view_config(
-    context=Role,
+    context=M.Role,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -42,7 +42,7 @@ def get_role(context, request):
     return context.role.__json__()
 
 @view_config(
-    context=Role,
+    context=M.Role,
     renderer='json',
     request_method='PUT',
     permission='update')
@@ -53,7 +53,7 @@ def update_role(context, request):
     return context.role.__json__()
 
 @view_config(
-    context=Role,
+    context=M.Role,
     renderer='json',
     request_method='DELETE',
     permission='delete')

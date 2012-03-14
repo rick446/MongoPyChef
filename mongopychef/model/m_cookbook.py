@@ -5,8 +5,8 @@ from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 from ming.utils import LazyProperty
 
+from .m_base import ModelBase, CookbookFile
 from .m_session import doc_session, orm_session
-from .m_sandbox import CookbookFile
 
 log = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ cookbook_version = collection(
     Field('libraries', [ CookbookFile ]),
     Index('account_id', 'cookbook_name', 'version', unique=True))
 
-class CookbookVersion(object):
+class CookbookVersion(ModelBase):
 
     @LazyProperty
     def version_vector(self):

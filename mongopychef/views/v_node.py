@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Nodes, Node
+from ..resources import Nodes
 from .. import model as M
 from ..lib import validators as V
 
@@ -34,29 +34,29 @@ def create_node(request):
     return dict(uri=n.url(request))
 
 @view_config(
-    context=Node,
+    context=M.Node,
     renderer='json',
     request_method='GET',
     permission='read')
 def get_node(context, request):
-    return context.node.__json__()
+    return context.__json__()
 
 @view_config(
-    context=Node,
+    context=M.Node,
     renderer='json',
     request_method='PUT',
     permission='update')
 def update_node(context, request):
-    assert request.json['name'] == context.node.name
-    context.node.update(V.NodeSchema().to_python(request.json, None))
-    return context.node.__json__()
+    assert request.json['name'] == context.name
+    context.update(V.NodeSchema().to_python(request.json, None))
+    return context.__json__()
 
 @view_config(
-    context=Node,
+    context=M.Node,
     renderer='json',
     request_method='DELETE',
     permission='delete')
 def delete_node(context, request):
-    context.node.delete()
-    return context.node.__json__()
+    context.delete()
+    return context.__json__()
 

@@ -7,6 +7,7 @@ from ming.fs import filesystem
 from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 from mongopychef.lib.util import cnonce
 
@@ -23,13 +24,8 @@ chef_file = filesystem(
     Field('sandbox_id', str),
     Field('needs_upload', bool))
 
-class Sandbox(object):
+class Sandbox(ModelBase):
     CHUNKSIZE=4096
-
-    @classmethod
-    def url_for(cls, request, checksum):
-        return request.relative_url(
-            '/files/' + checksum)
 
     @classmethod
     def create(cls, account, checksums):
@@ -102,23 +98,6 @@ class Sandbox(object):
                    (k, 'Missing upload')
                    for k in missing))
         self.delete()
-
-class CookbookFile(S.Object):
-
-    def __init__(self):
-        super(CookbookFile, self).__init__(
-            fields=dict(
-                name=S.String(),
-                url=S.String(),
-                checksum=S.String(),
-                path=S.String(),
-                specificity=S.String()))
-
-    def _validate(self, d, **kwargs):
-        r = super(CookbookFile, self)._validate(d, **kwargs)
-        if r['url'] is None:
-            r['url'] = Sandbox.url_for(r['checksum'])
-        return r
 
 orm_session.mapper(Sandbox, sandbox, properties=dict(
         account_id=ForeignIdProperty('Account'),

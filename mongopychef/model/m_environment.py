@@ -6,6 +6,7 @@ from ming import collection, Field, Index
 from ming import schema as S
 from ming.orm import RelationProperty, ForeignIdProperty
 
+from .m_base import ModelBase
 from .m_session import doc_session, orm_session
 
 log = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ environment = collection(
     Field('cookbook_versions', { str: str }),
     Index('account_id', 'name', unique=True))
 
-class Environment(object): 
+class Environment(ModelBase): 
 
     def url(self):
         return request.relative_url(
@@ -43,7 +44,6 @@ class Environment(object):
         self.default_attributes = dumps(d['default_attributes'])
         self.override_attributes = dumps(d['override_attributes'])
         self.cookbook_versions = d['cookbook_versions']
-
 
     def filter_cookbooks(self, name, iter):
         version = self.cookbook_versions.get(name, None)

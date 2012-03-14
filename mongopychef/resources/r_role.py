@@ -10,22 +10,14 @@ class Roles(Resource):
         self.__parent__ = parent
 
     def __getitem__(self, name):
-        return Role(self, name)
+        obj = self.request.account.get_object(
+            M.Role, name=name)
+        if obj is None:
+            raise exc.HTTPNotFound()
+        obj.__name__ = name
+        obj.__parent__ = self
+        return obj
 
     def __repr__(self):
         return '<Roles>'
-
-class Role(Resource):
-
-    def __init__(self, parent, name):
-        self.__parent__ = parent
-        self.__name__ = name
-        self.request = parent.request
-        self.role = parent.request.account.get_item(
-            M.Role, name=name)
-        if self.role is None:
-            raise exc.HTTPNotFound()
-
-    def __repr__(self):
-        return '<Role %s>' % self.__name__
 

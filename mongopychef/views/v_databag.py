@@ -5,7 +5,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Databags, Databag, DatabagItem
+from ..resources import Databags
 from .. import model as M
 from ..lib import validators as V
 
@@ -37,7 +37,7 @@ def create_databag(request):
         private_key=key.exportKey())
 
 @view_config(
-    context=Databag,
+    context=M.Databag,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -47,7 +47,7 @@ def read_databag(context, request):
         for dbi in context.databag.items)
 
 @view_config(
-    context=Databag,
+    context=M.Databag,
     renderer='json',
     request_method='POST',
     permission='create')
@@ -62,7 +62,7 @@ def create_databag_item(context, request):
     return dict(uri=dbi.url(request))
 
 @view_config(
-    context=DatabagItem,
+    context=M.DatabagItem,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -70,7 +70,7 @@ def read_databag_item(context, request):
     return context.item.__json__()
 
 @view_config(
-    context=DatabagItem,
+    context=M.DatabagItem,
     renderer='json',
     request_method='PUT',
     permission='update')
@@ -82,7 +82,7 @@ def update_databag_item(context, request):
     return context.item.data
 
 @view_config(
-    context=DatabagItem,
+    context=M.DatabagItem,
     renderer='json',
     request_method='DELETE',
     permission='delete')

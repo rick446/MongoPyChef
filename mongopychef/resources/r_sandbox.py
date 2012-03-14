@@ -10,22 +10,14 @@ class Sandboxes(Resource):
         self.__parent__ = parent
 
     def __getitem__(self, name):
-        return Sandbox(self, name)
+        obj = self.request.account.get_object(
+            M.Sandbox, name=name)
+        if obj is None:
+            raise exc.HTTPNotFound()
+        obj.__name__ = name
+        obj.__parent__ = self
+        return obj
 
     def __repr__(self):
         return '<Sandboxs>'
-
-class Sandbox(Resource):
-
-    def __init__(self, parent, name):
-        self.__parent__ = parent
-        self.__name__ = name
-        self.request = parent.request
-        self.sandbox = parent.request.account.get_object(
-            M.Sandbox, _id=name)
-        if self.sandbox is None:
-            raise exc.HTTPNotFound()
-
-    def __repr__(self):
-        return '<Sandbox %s>' % self.sandbox._id
 

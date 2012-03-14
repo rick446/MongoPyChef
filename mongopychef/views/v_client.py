@@ -3,7 +3,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Clients, Client
+from ..resources import Clients
 from .. import model as M
 
 @view_config(
@@ -33,30 +33,29 @@ def create_client(request):
         private_key=key.exportKey())
 
 @view_config(
-    context=Client,
+    context=M.Client,
     renderer='json',
     request_method='GET',
     permission='read')
 def get_client(context, request):
-    if not request.client.admin and context.client != request.client:
+    if not request.client.admin and context != request.client:
         raise exc.HTTPForbidden()
-    return context.client.__json__()
+    return context.__json__()
 
 @view_config(
-    context=Client,
+    context=M.Client,
     renderer='json',
     request_method='PUT',
     permission='update')
 def put_client(context, request):
-    cli = context.client
-    return cli.update(request.json)
+    return context.update(request.json)
 
 @view_config(
-    context=Client,
+    context=M.Client,
     renderer='json',
     request_method='DELETE',
     permission='delete')
 def delete_client(context, request):
-    context.client.delete()
+    context.delete()
     return {}
 
