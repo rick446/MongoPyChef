@@ -389,8 +389,74 @@ class TestDatabag(ChefTest):
         self.assertEqual(result, {
                 "data": "bar", "id": "test-item"})
 
-class TestRole(TestCase):
-    pass
+class TestRole(ChefTest):
+
+    def setUp(self):
+        super(TestRole, self).setUp()
+        M.Role(account_id=self.a1._id, name='test-role')
+        M.orm_session.flush()
+        M.orm_session.clear()
+
+    def test_list_roles(self):
+        result = self.chef_user_1.api_request('GET', '/roles')
+        self.assertEqual(result, {u'test-role': u'http://test/roles/test-role/'})
+
+    def test_new_role_ok(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/roles', data=dict(name='test-role-2'))
+        self.assertEqual(result, {
+                'uri': u'http://test/roles/test-role-2/'})
+
+    @expect_errors([409])
+    def test_new_bag_duplicate(self):
+        result = self.chef_1_validator.api_request(
+            'POST', '/roles', data=dict(name='test-role'))
+        assert result['status'].startswith('409')
+
+    def test_get_role_ok(self):
+        result = self.chef_user_1.api_request('GET', '/roles/test-role')
+        self.assertEqual(result, {
+                u'chef_type': u'role',
+                u'default_attributes': {},
+                u'description': None,
+                u'env_run_lists': {},
+                u'json_class': u'Chef::Role',
+                u'name': u'test-role',
+                u'override_attributes': {},
+                u'run_list': []})
+
+    @expect_errors([404])
+    def test_get_bag_404(self):
+        result = self.chef_user_1.api_request('GET', '/roles/does-not-exist')
+        self.assert_(result['status'].startswith('404'))
+
+    def test_put_role_ok(self):
+        result = self.chef_1_validator.api_request(
+            'PUT', '/roles/test-role', data=dict(
+                name='test-role',
+                description='The test role'))
+        self.assertEqual(result, {
+                u'chef_type': u'role',
+                u'default_attributes': {},
+                u'description': 'The test role',
+                u'env_run_lists': {},
+                u'json_class': u'Chef::Role',
+                u'name': u'test-role',
+                u'override_attributes': {},
+                u'run_list': []})
+        
+    def test_delete_role_ok(self):
+        result = self.chef_1_validator.api_request(
+            'DELETE', '/roles/test-role')
+        self.assertEqual(result, {
+                u'chef_type': u'role',
+                u'default_attributes': {},
+                u'description': None,
+                u'env_run_lists': {},
+                u'json_class': u'Chef::Role',
+                u'name': u'test-role',
+                u'override_attributes': {},
+                u'run_list': []})
 
 class TestSandbox(TestCase):
     pass

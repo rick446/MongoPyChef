@@ -110,6 +110,9 @@ class RoleSchema(JSONModelSchema):
     chef_type='role'
     json_class='Chef::Role'
     exclude_fields=['_id', 'account_id']
+    extra_fields=dict(
+        default_attributes={str:None},
+        override_attributes={str:None})
 
 DatabagSchema = JSONSchema(dict(name=str))
 DatabagItemSchema = JSONSchema(

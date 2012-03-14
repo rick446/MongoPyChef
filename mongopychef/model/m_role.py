@@ -16,16 +16,20 @@ role = collection(
     Field('account_id', S.ObjectId(if_missing=None)),
     Field('name', str),
     Field('description', str),
-    Field('default_attributes', str),
-    Field('override_attributes', str),
+    Field('default_attributes', str, if_missing='{}'),
+    Field('override_attributes', str, if_missing='{}'),
     Field('run_list', [ str ] ),
     Field('env_run_lists', { str: [ str ]}),
     Index('account_id', 'name', unique=True))
 
 class Role(ModelBase):
 
+    @property
+    def __name__(self):
+        return self.name
+
     def __json__(self):
-        return dict(
+        d = dict(
             chef_type='role',
             json_class='Chef::Role',
             name=self.name,
@@ -34,6 +38,7 @@ class Role(ModelBase):
             override_attributes=loads(self.override_attributes),
             env_run_lists=self.env_run_lists,
             run_list=self.run_list)
+        return d
 
     def update(self, d):
         self.name = d['name']

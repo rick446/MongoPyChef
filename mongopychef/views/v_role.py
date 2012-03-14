@@ -12,26 +12,25 @@ from ..lib import validators as V
     renderer='json',
     request_method='GET',
     permission='read')
-def list_roles(request):
+def list_roles(context, request):
     return dict(
-        (n.name, n.url(request))
-        for n in M.Role.query.find(dict(
-                account_id=request.account._id)))
+        (n.name, request.resource_url(n))
+        for n in context.find())
 
 @view_config(
     context=Roles,
     renderer='json',
     request_method='POST',
     permission='create')
-def create_role(request):
-    n = M.Role(account_id=request.account._id)
+def create_role(context, request):
+    n = context.new_object()
     n.update(V.RoleSchema().to_python(request.json, None))
     try:
         M.orm_session.flush(n)
     except DuplicateKeyError:
         M.orm_session.expunge(n)
         raise exc.HTTPConflict()
-    return dict(uri=n.url(request))
+    return dict(uri=request.resource_url(n))
 
 @view_config(
     context=M.Role,
@@ -39,7 +38,7 @@ def create_role(request):
     request_method='GET',
     permission='read')
 def get_role(context, request):
-    return context.role.__json__()
+    return context.__json__()
 
 @view_config(
     context=M.Role,
@@ -48,9 +47,9 @@ def get_role(context, request):
     permission='update')
 def update_role(context, request):
     data = V.RoleSchema().to_python(request.json, None)
-    assert data['name'] == context.role.name
-    context.role.update(data)
-    return context.role.__json__()
+    assert data['name'] == context.name
+    context.update(data)
+    return context.__json__()
 
 @view_config(
     context=M.Role,
@@ -58,6 +57,6 @@ def update_role(context, request):
     request_method='DELETE',
     permission='delete')
 def delete_role(context, request):
-    context.role.delete()
-    return context.role.__json__()
+    context.delete()
+    return context.__json__()
 
