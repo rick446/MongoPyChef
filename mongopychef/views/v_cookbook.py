@@ -75,9 +75,10 @@ def update_cookbook_version(context, request):
     context=CookbookVersion, renderer='json',
     request_method='DELETE', permission='delete')
 def delete_cookbook_version(context, request):
-    if context.cookbook_version is None:
-        raise exc.HTTPNotFound()
-    context.cookbook_version.delete()
+    M.CookbookVersion.query.remove(dict(
+        account_id=request.account._id,
+        name=context.cookbook_name,
+        version=context.cookbook_version))
     return {}
 
 
