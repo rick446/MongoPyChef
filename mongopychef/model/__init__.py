@@ -11,6 +11,6 @@ from m_cookbook import CookbookVersion, cookbook_version
 from m_environment import Environment, environment
 from m_role import Role, role
 from m_data import Databag, DatabagItem
-from m_sandbox import Sandbox
+from m_sandbox import Sandbox, ChefFile
 
 Mapper.compile_all()

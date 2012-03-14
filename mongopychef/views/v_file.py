@@ -3,13 +3,12 @@ import logging
 from pyramid.response import Response
 from pyramid.view import view_config
 
-from ..resources import File
 from .. import model as M
 
 log = logging.getLogger(__name__)
 
 @view_config(
-    context=File,
+    context=M.ChefFile,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -19,7 +18,7 @@ def read_file(context, request):
     return Response(status=200, app_iter=fp)
 
 @view_config(
-    context=File,
+    context=M.ChefFile,
     renderer='json',
     request_method='PUT',
     permission='update')

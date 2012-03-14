@@ -99,7 +99,13 @@ class Sandbox(ModelBase):
                    for k in missing))
         self.delete()
 
+class ChefFile(ModelBase):
+    pass
+
 orm_session.mapper(Sandbox, sandbox, properties=dict(
+        account_id=ForeignIdProperty('Account'),
+        account=RelationProperty('Account')))
+orm_session.mapper(ChefFile, chef_file,properties=dict(
         account_id=ForeignIdProperty('Account'),
         account=RelationProperty('Account')))
 

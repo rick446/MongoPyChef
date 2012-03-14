@@ -3,9 +3,10 @@ from .r_base import Resource
 class Cookbooks(Resource):
     __name__ = 'cookbooks'
 
-    def __init__(self, request, parent):
+    def __init__(self, request, parent, account):
         self.__parent__ = parent
         self.request = request
+        self.account = account
         
     def __getitem__(self, name):
         return Cookbook(self, name)
