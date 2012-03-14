@@ -11,10 +11,10 @@ from ..lib import validators as V
     permission='add')
 def create_sandbox(context, request):
     data = V.SandboxSchema.to_python(request.json)
-    sandbox, response = M.Sandbox.create(
-        request.account,  data['checksums'].keys())
+    sandbox = context.new_object(checksums=data['checksums'].keys())
+    response = sandbox.initialize(request)
     return dict(
-        uri=sandbox.url(request),
+        uri=request.resource_url(sandbox),
         checksums=response)
 
 @view_config(

@@ -13,8 +13,7 @@ log = logging.getLogger(__name__)
 @subscriber(ContextFound)
 def translate_json(event):
     req = event.request
-    accept = req.accept
-    if accept.header_value == 'application/json':
+    if req.content_type == 'application/json':
         if not req.body:
             req.json = None
             return

@@ -1,4 +1,5 @@
 import urllib2
+from hashlib import md5
 from cStringIO import StringIO
 from unittest import TestCase
 
@@ -32,7 +33,7 @@ class _TestUrlLibHandler(urllib2.BaseHandler):
         if data is not None:
             environ['wsgi.input'] = StringIO(data)
         result = self.app.request(
-                full_url.replace('test://', 'http://'),
+                full_url.replace('test://', 'http://').encode('utf-8'),
                 headers=dict(headers),
                 environ=environ,
                 expect_errors=self.expect_errors)
@@ -458,8 +459,102 @@ class TestRole(ChefTest):
                 u'override_attributes': {},
                 u'run_list': []})
 
-class TestSandbox(TestCase):
-    pass
+class TestSandbox(ChefTest):
+
+    def setUp(self):
+        super(TestSandbox, self).setUp()
+        self.file_content = 'Hello World'
+        self.file_checksum = md5(self.file_content).hexdigest()
+        M.orm_session.flush()
+        M.orm_session.clear()
+
+    def _create_sandbox(self):
+        return self.chef_1_validator.api_request(
+            'POST', '/sandboxes', data=dict(checksums={
+                    self.file_checksum: None}))
+
+    def _upload_file(self):
+        d = self._create_sandbox()
+        file_url = d['checksums'].values()[0]['url']
+        file_path = file_url[len('http://test'):]
+        headers = {'accept':'application/json'}
+        return self.chef_1_validator.request(
+            'PUT', file_path, headers, data=self.file_content)
+        
+    def test_new_sandbox_ok(self):
+        result = self._create_sandbox()
+        uri = result.pop('uri')
+        self.assertEqual(result, {
+                u'checksums': {
+                    u'b10a8db164e0754105b7a99be72e3fe5': {
+                        u'url': uri+'b10a8db164e0754105b7a99be72e3fe5',
+                        u'needs_upload': True}}})
+
+    def test_close_sandbox_ok(self):
+        sb = self._create_sandbox()
+        self._upload_file()
+        sb_path = sb['uri'][len('http://test'):]
+        self.chef_1_validator.api_request(
+            'PUT', sb_path, data=dict(is_completed=True))
+
+    @expect_errors([400])
+    def test_close_sandbox_unfinished(self):
+        sb = self._create_sandbox()
+        sb_path = sb['uri'][len('http://test'):]
+        result = self.chef_1_validator.api_request(
+            'PUT', sb_path, data=dict(is_completed=True))
+        assert result['status'].startswith('400')
+
+    # @expect_errors([409])
+    # def test_new_bag_duplicate(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'POST', '/sandboxs', data=dict(name='test-sandbox'))
+    #     assert result['status'].startswith('409')
+
+    # def test_get_sandbox_ok(self):
+    #     result = self.chef_user_1.api_request('GET', '/sandboxs/test-sandbox')
+    #     self.assertEqual(result, {
+    #             u'chef_type': u'sandbox',
+    #             u'default_attributes': {},
+    #             u'description': None,
+    #             u'env_run_lists': {},
+    #             u'json_class': u'Chef::Sandbox',
+    #             u'name': u'test-sandbox',
+    #             u'override_attributes': {},
+    #             u'run_list': []})
+
+    # @expect_errors([404])
+    # def test_get_bag_404(self):
+    #     result = self.chef_user_1.api_request('GET', '/sandboxs/does-not-exist')
+    #     self.assert_(result['status'].startswith('404'))
+
+    # def test_put_sandbox_ok(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'PUT', '/sandboxs/test-sandbox', data=dict(
+    #             name='test-sandbox',
+    #             description='The test sandbox'))
+    #     self.assertEqual(result, {
+    #             u'chef_type': u'sandbox',
+    #             u'default_attributes': {},
+    #             u'description': 'The test sandbox',
+    #             u'env_run_lists': {},
+    #             u'json_class': u'Chef::Sandbox',
+    #             u'name': u'test-sandbox',
+    #             u'override_attributes': {},
+    #             u'run_list': []})
+        
+    # def test_delete_sandbox_ok(self):
+    #     result = self.chef_1_validator.api_request(
+    #         'DELETE', '/sandboxs/test-sandbox')
+    #     self.assertEqual(result, {
+    #             u'chef_type': u'sandbox',
+    #             u'default_attributes': {},
+    #             u'description': None,
+    #             u'env_run_lists': {},
+    #             u'json_class': u'Chef::Sandbox',
+    #             u'name': u'test-sandbox',
+    #             u'override_attributes': {},
+    #             u'run_list': []})
 
 class TestCookbook(TestCase):
     pass

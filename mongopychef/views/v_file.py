@@ -13,8 +13,7 @@ log = logging.getLogger(__name__)
     request_method='GET',
     permission='read')
 def read_file(context, request):
-    fp = M.chef_file.m.get_file(
-        str(request.account._id) + '/' + context.checksum)
+    fp = M.chef_file.m.get_file(context._id)
     return Response(status=200, app_iter=fp)
 
 @view_config(
@@ -23,10 +22,7 @@ def read_file(context, request):
     request_method='PUT',
     permission='update')
 def upload_file(context, request):
-    fobj = M.chef_file.m.get_file(
-        str(request.account._id) + '/' + context.checksum)
-    sb = M.Sandbox.query.get(_id=fobj.sandbox_id)
-    sb.upload(context.checksum, request.body_file)
-    log.info('PUT %s', context.checksum)
+    context.upload(request.body_file)
+    log.info('PUT %s', context.md5)
     return {}
 

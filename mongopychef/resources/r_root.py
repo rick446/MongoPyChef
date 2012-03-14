@@ -5,7 +5,6 @@ from .. import model as M
 from .r_cookbook import Cookbooks
 from .r_environment import Environments
 from .r_search import Search
-from .r_sandbox import Sandboxes
 
 class Clients(ResourceCollection):
     __name__ = 'clients'
@@ -26,10 +25,16 @@ class Roles(ResourceCollection):
 class Files(ResourceCollection):
     __name__ = 'files'
     __model__ = M.ChefFile
-    allow_new = True
+    key_property = '_id'
+
+class Sandboxes(ResourceCollection):
+    __name__ = 'sandboxes'
+    __model__ = M.Sandbox
+    key_property = '_id'
 
 class Root(dict):
     __name__ = ''
+    __parent__ = None
     children = dict(
         clients=Clients,
         cookbooks=Cookbooks,
