@@ -29,7 +29,7 @@ class EnvironmentCookbooks(Resource):
     def __init__(self, parent):
         self.__parent__ = parent
         self.request = parent.request
-        self.environment = parent.environment
+        self.environment = parent
 
     def __getitem__(self, name):
         return EnvironmentCookbook(self, name)
@@ -57,7 +57,7 @@ class EnvironmentCookbookVersions(Resource):
         self.__parent__ = parent
         self.parent = parent
         self.request = parent.request
-        self.environment = parent.environment
+        self.environment = parent
 
     def __repr__(self):
         return '<EnvironmentCookbookVersions %s>' % self.parent.name
@@ -65,7 +65,7 @@ class EnvironmentCookbookVersions(Resource):
 class Environment(ModelBase):
     children = dict(
         cookbooks=EnvironmentCookbooks,
-        data=EnvironmentCookbookVersions)
+        cookbook_versions=EnvironmentCookbookVersions)
 
     @property
     def __name__(self):
@@ -91,7 +91,7 @@ class Environment(ModelBase):
         self.override_attributes = dumps(d['override_attributes'])
         self.cookbook_versions = d['cookbook_versions']
 
-    def filter_cookbooks(self, name, iter):
+    def filter_versions(self, name, iter):
         version = self.cookbook_versions.get(name, None)
         if version is None:
             return iter
@@ -104,17 +104,16 @@ class Environment(ModelBase):
         if run_list is None:
             q = CookbookVersion.query.find(dict(
                     account_id=self.account_id))
+            q = q.sort('cookbook_name')
         else:
-            cookbook_names = list(expand_runlist(
+            q = list(expand_runlist(
                     self.account._id, run_list, self))
-            q = CookbookVersion.query.find(dict(
-                    account_id=self.account_id,
-                    name={'$in':cookbook_names}))
+            q = sorted(q, key=lambda v:v.cookbook_name)
         result = {}
-        for name, cookbooks in groupby(q, key=lambda cb:cb.name):
-            cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
-            cookbooks = list(self.filter_cookbooks(name, cookbooks))
-            result[name] = cookbooks[0]
+        for name, versions in groupby(q, key=lambda cb:cb.name):
+            versions = sorted(versions, key=lambda cb:cb.version_vector, reverse=True)
+            version = list(versions)[0]
+            result[version.cookbook_name] = version.__json__()
         return result
 
 orm_session.mapper(Environment, environment, properties=dict(

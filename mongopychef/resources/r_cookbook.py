@@ -15,7 +15,7 @@ class Cookbooks(Resource):
     def __getitem__(self, name):
         return Cookbook(self, name)
 
-    def __repr__(self):
+    def __repr__(self): # pragma no cover
         return '<Cookbooks>'
 
 class Cookbook(ResourceCollection):
@@ -26,7 +26,7 @@ class Cookbook(ResourceCollection):
         self.name = name
         super(Cookbook, self).__init__(parent.request, parent, parent.account)
 
-    def __repr__(self):
+    def __repr__(self): # pragma no cover
         return '<Cookbook %s>' % self.name
 
     def find(self, *args, **kwargs):

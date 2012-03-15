@@ -527,19 +527,21 @@ class TestSandbox(ChefTest):
         result = self._download_file()
         self.assertEqual(result, 'Hello World')
 
+def create_cookbooks(account, names, versions):
+    for name in names:
+        for version in versions:
+            account.new_object(
+                M.CookbookVersion,
+                name='%s-%s' % (name, version),
+                cookbook_name=name,
+                version=version)
+
 class TestCookbook(ChefTest):
 
     def setUp(self):
         super(TestCookbook, self).setUp()
-        names = [ 'mpc', 'arden' ]
-        versions = [ '1.0', '1.1', '1.2' ]
-        for name in names:
-            for version in versions:
-                self.a1.new_object(
-                    M.CookbookVersion,
-                    name='%s-%s' % (name, version),
-                    cookbook_name=name,
-                    version=version)
+        create_cookbooks(
+            self.a1, ['mpc', 'arden'], [ '1.0', '1.1', '1.2' ])
         M.orm_session.flush()
         M.orm_session.clear()
 
@@ -548,10 +550,10 @@ class TestCookbook(ChefTest):
         self.assertEqual(result, {
                 u'arden': {
                     u'url': u'http://test/cookbooks/arden/',
-                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'}]},
+                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'}]},
                 u'mpc': {
                     u'url': u'http://test/cookbooks/mpc/',
-                    u'versions': [{u'url': u'http://test/cookbooks/mpc/1.0/', u'version': u'1.0'}]}})
+                    u'versions': [{u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'}]}})
 
     def test_list_cookbooks_all(self):
         result = self.chef_user_1.api_request('GET', '/cookbooks?num_versions=all')
@@ -560,15 +562,15 @@ class TestCookbook(ChefTest):
                 u'arden': {
                     u'url': u'http://test/cookbooks/arden/',
                     u'versions': [
-                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
                         {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
-                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'} ] },
+                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'} ] },
                 u'mpc': {
                     u'url': u'http://test/cookbooks/mpc/',
                     u'versions': [
-                        {u'url': u'http://test/cookbooks/mpc/1.0/', u'version': u'1.0'},
+                        {u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'},
                         {u'url': u'http://test/cookbooks/mpc/1.1/', u'version': u'1.1'},
-                        {u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'} ] }
+                        {u'url': u'http://test/cookbooks/mpc/1.0/', u'version': u'1.0'} ] }
                 })
 
     def test_view_cookbook_default(self):
@@ -576,12 +578,17 @@ class TestCookbook(ChefTest):
         self.assertEqual(result, {
                 u'arden': {
                     u'url': u'http://test/cookbooks/arden/',
-                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'}]}
+                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'}]}
                 })
 
     @expect_errors([404])
     def test_view_cookbook_404(self):
-        result = self.chef_user_1.api_request('GET', '/cookbooks/ardien')
+        result = self.chef_user_1.api_request('GET', '/cookbooks/does-not-exist')
+        self.assert_(result['status'].startswith('404'))
+
+    @expect_errors([404])
+    def test_view_cookbook_version_404(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks/arden/2.0')
         self.assert_(result['status'].startswith('404'))
 
     def test_view_cookbook_all(self):
@@ -590,9 +597,9 @@ class TestCookbook(ChefTest):
                 u'arden': {
                     u'url': u'http://test/cookbooks/arden/',
                     u'versions': [
-                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
-                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
                         {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
                         ]}
                 })
 
@@ -629,8 +636,8 @@ class TestCookbook(ChefTest):
                 u'arden': {
                     u'url': u'http://test/cookbooks/arden/',
                     u'versions': [
-                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
                         {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
                         ]}
                 })
 
@@ -640,12 +647,13 @@ class TestEnvironment(ChefTest):
         super(TestEnvironment, self).setUp()
         self.a1.new_object(
             M.Environment, name='Test', cookbook_versions=dict(
-                arden='1.2',
                 mpc='1.2'))
         self.a1.new_object(
             M.Environment, name='Prod', cookbook_versions=dict(
                 arden='1.0',
                 mpc='1.0'))
+        create_cookbooks(
+            self.a1, ['mpc', 'arden'], [ '1.0', '1.1', '1.2' ])
         M.orm_session.flush()
         M.orm_session.clear()
 
@@ -677,7 +685,7 @@ class TestEnvironment(ChefTest):
                 u'default_attributes': {},
                 u'description': '',
                 u'override_attributes': {},
-                u'cookbook_versions': {u'arden': u'1.2', u'mpc': u'1.2'},
+                u'cookbook_versions': {u'mpc': u'1.2'},
                 u'json_class': u'Chef::Environment',
                 u'name': u'Test'})
 
@@ -690,7 +698,7 @@ class TestEnvironment(ChefTest):
                 u'default_attributes': {},
                 u'description': 'The test environ',
                 u'override_attributes': {},
-                u'cookbook_versions': {u'arden': u'1.2', u'mpc': u'1.2'},
+                u'cookbook_versions': {u'mpc': u'1.2'},
                 u'json_class': u'Chef::Environment',
                 u'name': u'Test'})
 
@@ -699,5 +707,84 @@ class TestEnvironment(ChefTest):
         result = self.chef_user_1.api_request('GET', '/environments')
         self.assertEqual(result, {
                 u'Prod': u'http://test/environments/Prod/'})
+
+    def test_list_environ_cookbooks(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test/cookbooks')
+        self.maxDiff=None
+        self.assertEqual(result, {
+                u'mpc': {
+                    u'url': u'http://test/cookbooks/mpc/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'}] },
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'} ]},
+                })
+
+    def test_list_environ_cookbooks_all(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test/cookbooks?num_versions=all')
+        self.maxDiff=None
+        self.assertEqual(result, {
+                u'mpc': {
+                    u'url': u'http://test/cookbooks/mpc/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'}] },
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
+                        ]}
+                })
         
-    
+    def test_view_environment_cookbook_default(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test/cookbooks/arden')
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'}]}
+                })
+
+    @expect_errors([404])
+    def test_view_cookbook_404(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test/cookbooks/does-not-exist')
+        self.assert_(result['status'].startswith('404'))
+
+    def test_get_cookbook_versions(self):
+        result = self.chef_user_1.api_request('POST', '/environments/Test/cookbook_versions', data=dict(
+                run_list=['mpc', 'arden@1.1']))
+        self.assertEqual(result, {
+                u'arden': {
+                    u'chef_type':u'cookbook_version',
+                    u'json_class': u'Chef::CookbookVersion',
+                    u'name': u'arden-1.1',
+                    u'cookbook_name': u'arden',
+                    u'version': u'1.1',
+                    u'templates': [],
+                    u'files': [],
+                    u'providers': [],
+                    u'recipes': [],
+                    u'libraries': [],
+                    u'definitions': [],
+                    u'root_files': [],
+                    u'attributes': [],
+                    u'resources': [],
+                    u'metadata': {}},
+                u'mpc': {
+                    u'chef_type': u'cookbook_version',
+                    u'json_class': u'Chef::CookbookVersion',
+                    u'name': u'mpc-1.2',
+                    u'cookbook_name': u'mpc',
+                    u'version': u'1.2',
+                    u'templates': [],
+                    u'files': [],
+                    u'providers': [],
+                    u'recipes': [],
+                    u'libraries': [],
+                    u'definitions': [],
+                    u'root_files': [],
+                    u'attributes': [],
+                    u'resources': [],
+                    u'metadata': {}}})

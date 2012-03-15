@@ -1,11 +1,11 @@
 import sys
 from itertools import groupby
-from json import dumps
 
 from webob import exc
 from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
+from pyramid.traversal import find_resource
 
 from ..resources import Environments
 from .. import model as M
@@ -70,21 +70,22 @@ def delete_environment(context, request):
     request_method='GET',
     permission='read')
 def list_environment_cookbooks(context, request):
-    num_versions = request.params.get('num_versions', '1')
-    if num_versions == 'all': num_versions = sys.maxint
-    num_versions = int(num_versions)
+    num_versions = V.CookbookNumVersions.to_python(
+        request.params, None)['num_versions']
     q = request.account.find_objects(M.CookbookVersion)
     q = q.sort('name')
     result = {}
-    for name, cookbooks in groupby(q, key=lambda cb:cb.name):
-        cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
-        cookbooks = list(context.environment.filter_cookbooks(name, cookbooks))
-        cookbooks = cookbooks[:num_versions]
+    for name, versions in groupby(q, key=lambda cb:cb.cookbook_name):
+        cookbook = find_resource(request.root, 'cookbooks/' + name)
+        versions = sorted(versions, key=lambda cb:cb.version_vector, reverse=True)
+        versions = list(context.environment.filter_versions(name, versions))
+        versions = versions[:num_versions]
+        versions = map(cookbook.decorate_child, versions)
         result[name] = dict(
-            url=M.CookbookVersion.cookbook_url(request, name),
+            url=request.resource_url(cookbook),
             versions=[
-                dict(url=cb.url(request), version=cb.version)
-                for cb in cookbooks ])
+                dict(url=request.resource_url(cb), version=cb.version)
+                for cb in versions ])
     return result
 
 @view_config(
@@ -93,22 +94,23 @@ def list_environment_cookbooks(context, request):
     request_method='GET',
     permission='read')
 def read_environment_cookbook(context, request):
-    num_versions = request.params.get('num_versions', '1')
-    if num_versions == 'all': num_versions = sys.maxint
-    num_versions = int(num_versions)
-    cookbooks = request.account.find_objects(
-        M.CookbookVersion, name=context.name).all()
-    if not cookbooks:
+    num_versions = V.CookbookNumVersions.to_python(
+        request.params, None)['num_versions']
+    cookbook = find_resource(request.root, 'cookbooks/' + context.name)
+    versions = request.account.find_objects(
+        M.CookbookVersion, dict(cookbook_name=context.name)).all()
+    if not versions:
         raise exc.HTTPNotFound()
-    cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
-    cookbooks = list(context.environment.filter_cookbooks(context.name, cookbooks))
-    cookbooks = cookbooks[:num_versions]
-    return dict(
-        name=dict(
-            url=M.CookbookVersion.cookbook_url(request, context.name),
+    versions = sorted(versions, key=lambda cb:cb.version_vector, reverse=True)
+    versions = list(context.environment.filter_versions(context.name, versions))
+    versions = versions[:num_versions]
+    versions = map(cookbook.decorate_child, versions)
+    return {
+        context.name: dict(
+            url=request.resource_url(cookbook),
             versions=[
-                dict(url=cb.url(), version=cb.version)
-                for cb in cookbooks ]))
+                dict(url=request.resource_url(cb), version=cb.version)
+                for cb in versions ]) }
 
 @view_config(
     context=M.EnvironmentCookbookVersions,
@@ -116,9 +118,8 @@ def read_environment_cookbook(context, request):
     request_method='POST',
     permission='read')
 def get_cookbook_versions(context, request):
-    if context.environment is None:
-        raise exc.HTTPNotFound()
-    data = V.EnvironmentCookbookVersionsSchema.to_python(request.json_body, None)
+    data = V.EnvironmentCookbookVersionsSchema.to_python(
+        request.json_body, None)
     result = context.environment.get_cookbook_versions(data['run_list'])
     return result
 

@@ -17,17 +17,16 @@ from ..lib import validators as V
 def list_cookbooks(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
-    q = M.CookbookVersion.query.find(dict(
-            account_id=request.account._id))
+    q = request.account.find_objects(M.CookbookVersion)
     q = q.sort('name')
     result = {}
     for name, versions in groupby(q, key=lambda cb:cb.cookbook_name):
         cookbook = find_resource(context, name)
-        versions = sorted(versions, key=lambda cb:cb.version_vector)
+        versions = sorted(versions, key=lambda cb:cb.version_vector, reverse=True)
         versions = versions[:num_versions]
         versions = map(cookbook.decorate_child, versions)
         result[name] = dict(
-            url=request.resource_url(context, name, ''),
+            url=request.resource_url(cookbook),
             versions=[
                 dict(url=request.resource_url(cb), version=cb.version)
                 for cb in versions ])
@@ -41,14 +40,11 @@ def list_cookbooks(context, request):
 def view_cookbook(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
-    versions = context.find(dict(
-            cookbook_name=context.name)).all()
-    versions = M.CookbookVersion.query.find(dict(
-            account_id=request.account._id,
-            cookbook_name=context.name)).all()
+    versions = request.account.find_objects(
+        M.CookbookVersion, dict(cookbook_name=context.name)).all()
     if not versions:
         raise exc.HTTPNotFound()
-    versions = sorted(versions, key=lambda cb:cb.version_vector)
+    versions = sorted(versions, key=lambda cb:cb.version_vector, reverse=True)
     versions = versions[:num_versions]
     versions = map(context.decorate_child, versions)
     return {
