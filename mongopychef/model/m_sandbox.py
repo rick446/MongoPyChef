@@ -24,6 +24,7 @@ sandbox = collection(
 chef_file = filesystem(
     'chef.file', doc_session,
     Field('_id', str), # account_id-md5
+    Field('account_id', S.ObjectId(if_missing=None)),
     Field('needs_upload', bool, if_missing=True))
 
 class Sandbox(ModelBase):
@@ -84,7 +85,8 @@ class ChefFile(ModelBase):
     def upload(self, ifp):
         fs = self.query.mapper.collection.m.fs
         fs.delete(self._id)
-        with fs.new_file(_id=self._id) as ofp:
+        with fs.new_file(
+            _id=self._id, account_id=self.account_id, needs_upload=False) as ofp:
             while True:
                 chunk = ifp.read(self.CHUNKSIZE)
                 if chunk: ofp.write(chunk)
