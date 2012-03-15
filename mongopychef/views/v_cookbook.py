@@ -67,7 +67,7 @@ def view_cookbook_version(context, request):
     request_method='PUT',
     permission='update')
 def update_cookbook_version(context, request):
-    context.update(V.NodeSchema().to_python(request.json, None))
+    context.update(V.NodeSchema().to_python(request.json_body, None))
     return {}
 
 @view_config(

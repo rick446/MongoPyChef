@@ -24,7 +24,7 @@ def list_databags(context, request):
     request_method='POST',
     permission='add')
 def create_databag(context, request):
-    data = V.DatabagSchema.to_python(request.json, None)
+    data = V.DatabagSchema.to_python(request.json_body, None)
     bag = context.new_object(name=data['name'])
     try:
         M.orm_session.flush(bag)
@@ -49,7 +49,7 @@ def read_databag(context, request):
     request_method='POST',
     permission='create')
 def create_databag_item(context, request):
-    data = V.DatabagItemSchema.to_python(request.json, None)
+    data = V.DatabagItemSchema.to_python(request.json_body, None)
     raw_data = data['raw_data']
     dbi = context.new_object(**raw_data)
     try:
@@ -73,7 +73,7 @@ def read_databag_item(context, request):
     request_method='PUT',
     permission='update')
 def update_databag_item(context, request):
-    data = V.DatabagItemSchema.to_python(request.json, None)
+    data = V.DatabagItemSchema.to_python(request.json_body, None)
     raw_data = data['raw_data']
     assert raw_data['id'] == context.id
     context.data = dumps(raw_data)

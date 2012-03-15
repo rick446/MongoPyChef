@@ -10,7 +10,7 @@ from ..lib import validators as V
     request_method='POST',
     permission='add')
 def create_sandbox(context, request):
-    data = V.SandboxSchema.to_python(request.json)
+    data = V.SandboxSchema.to_python(request.json_body)
     sandbox = context.new_object(checksums=data['checksums'].keys())
     response = sandbox.initialize(request)
     return dict(

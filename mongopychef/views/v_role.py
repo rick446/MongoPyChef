@@ -24,7 +24,7 @@ def list_roles(context, request):
     permission='create')
 def create_role(context, request):
     n = context.new_object()
-    n.update(V.RoleSchema().to_python(request.json, None))
+    n.update(V.RoleSchema().to_python(request.json_body, None))
     try:
         M.orm_session.flush(n)
     except DuplicateKeyError:
@@ -46,7 +46,7 @@ def get_role(context, request):
     request_method='PUT',
     permission='update')
 def update_role(context, request):
-    data = V.RoleSchema().to_python(request.json, None)
+    data = V.RoleSchema().to_python(request.json_body, None)
     assert data['name'] == context.name
     context.update(data)
     return context.__json__()

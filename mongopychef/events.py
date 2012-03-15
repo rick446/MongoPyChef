@@ -1,27 +1,13 @@
-import json
 import logging
 import binascii
 
-from pyramid.events import NewRequest, ContextFound, subscriber
+from pyramid.events import NewRequest, subscriber
 
 from chef.auth import canonical_request, canonical_path, sha1_base64
 
 from . import model as M
 
 log = logging.getLogger(__name__)
-
-@subscriber(ContextFound)
-def translate_json(event):
-    req = event.request
-    if req.content_type == 'application/json':
-        if not req.body:
-            req.json = None
-            return
-        try:
-            req.json = json.loads(req.body)
-        except ValueError:
-            log.exception('Invalid json')
-            raise
 
 @subscriber(NewRequest)
 def authorize_request(event):

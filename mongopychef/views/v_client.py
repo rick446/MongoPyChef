@@ -21,7 +21,7 @@ def list_clients(context, request):
              permission='create')
 def create_client(context, request):
     cli, key = M.Client.generate(
-        request.client.principal, **request.json)
+        request.client.principal, **request.json_body)
     cli.__parent__ = context
     try:
         M.orm_session.flush(cli)
@@ -48,7 +48,7 @@ def get_client(context, request):
     request_method='PUT',
     permission='update')
 def put_client(context, request):
-    return context.update(request.json)
+    return context.update(request.json_body)
 
 @view_config(
     context=M.Client,

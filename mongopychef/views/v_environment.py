@@ -29,7 +29,7 @@ def list_environments(context, request):
     permission='create')
 def create_environment(context, request):
     env = M.Environment(account_id=request.account._id)
-    env.update(V.EnvironmentSchema().to_python(request.json, None))
+    env.update(V.EnvironmentSchema().to_python(request.json_body, None))
     try:
         M.orm_session.flush(env)
     except DuplicateKeyError:
@@ -55,7 +55,7 @@ def read_environment(context, request):
 def update_environment(context, request):
     if context.environment is None:
         raise exc.HTTPNotFound()
-    data = V.EnvironmentSchema().to_python(request.json, None)
+    data = V.EnvironmentSchema().to_python(request.json_body, None)
     assert data['name'] == context.environment.name
     context.environment.update(data)
     return context.environment.__json__()
@@ -125,7 +125,7 @@ def read_environment_cookbook(context, request):
 def get_cookbook_versions(context, request):
     if context.environment is None:
         raise exc.HTTPNotFound()
-    data = V.EnvironmentCookbookVersionsSchema.to_python(request.json, None)
+    data = V.EnvironmentCookbookVersionsSchema.to_python(request.json_body, None)
     result = context.environment.get_cookbook_versions(data['run_list'])
     return result
 

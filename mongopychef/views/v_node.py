@@ -22,7 +22,7 @@ def list_nodes(context, request):
     request_method='POST',
     permission='create')
 def create_node(context, request):
-    data = V.NodeSchema().to_python(request.json, None)
+    data = V.NodeSchema().to_python(request.json_body, None)
     n = context.new_object(name=data['name'])
     n.update(data)
     try:
@@ -46,8 +46,8 @@ def get_node(context, request):
     request_method='PUT',
     permission='update')
 def update_node(context, request):
-    assert request.json['name'] == context.name
-    context.update(V.NodeSchema().to_python(request.json, None))
+    assert request.json_body['name'] == context.name
+    context.update(V.NodeSchema().to_python(request.json_body, None))
     return context.__json__()
 
 @view_config(
