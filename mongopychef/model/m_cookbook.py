@@ -17,7 +17,7 @@ cookbook_version = collection(
     Field('name', str),
     Field('version', str),
     Field('cookbook_name', str),
-    Field('metadata', None),
+    Field('metadata', S.Anything(if_missing={})),
     Field('definitions', [ CookbookFile ]),
     Field('attributes', [ CookbookFile ]),
     Field('files', [ CookbookFile ]),
@@ -31,14 +31,13 @@ cookbook_version = collection(
 
 class CookbookVersion(ModelBase):
 
+    @property
+    def __name__(self):
+        return self.version
+
     @LazyProperty
     def version_vector(self):
         return tuple(int(x) for x in self.version.split('.'))
-
-    @classmethod
-    def cookbook_url(cls, request, name):
-        return request.relative_url(
-            '/cookbooks/' + name)
 
     def __json__(self):
         return dict(

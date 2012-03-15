@@ -7,7 +7,11 @@ class Resource(dict):
     def allow_access(self, client, permission):
         return permission == 'read' or client.admin
 
-class ResourceCollection(object):
+    def decorate_child(self, obj):
+        obj.__parent__ = self
+        return obj
+
+class ResourceCollection(Resource):
     __name__ = None
     __model__ = None
     allow_new = False
@@ -17,9 +21,6 @@ class ResourceCollection(object):
         self.request = request
         self.__parent__ = parent
         self.account = account
-
-    def allow_access(self, client, permission):
-        return permission == 'read' or client.admin
 
     def __getitem__(self, name):
         obj = self.account.get_object(
@@ -36,10 +37,6 @@ class ResourceCollection(object):
     def new_object(self, **kw):
         obj = self.account.new_object(
             self.__model__, **kw)
-        obj.__parent__ = self
-        return obj
-
-    def decorate_child(self, obj):
         obj.__parent__ = self
         return obj
 

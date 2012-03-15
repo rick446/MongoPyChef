@@ -3,8 +3,6 @@ from .r_base import ResourceCollection
 from .. import model as M
 
 from .r_cookbook import Cookbooks
-from .r_environment import Environments
-from .r_search import Search
 
 class Clients(ResourceCollection):
     __name__ = 'clients'
@@ -13,6 +11,10 @@ class Clients(ResourceCollection):
 class Databags(ResourceCollection):
     __name__ = 'data'
     __model__ = M.Databag
+
+class Environments(ResourceCollection):
+    __name__ = 'environments'
+    __model__ = M.Environment
 
 class Nodes(ResourceCollection):
     __name__ = 'nodes'
@@ -31,6 +33,8 @@ class Sandboxes(ResourceCollection):
     __name__ = 'sandboxes'
     __model__ = M.Sandbox
     key_property = '_id'
+
+class Search(object): pass
 
 class Root(dict):
     __name__ = ''

@@ -3,6 +3,7 @@ from itertools import groupby
 from webob import exc
 
 from pyramid.view import view_config
+from pyramid.traversal import find_resource
 
 from ..resources import Cookbooks, Cookbook
 from .. import model as M
@@ -14,20 +15,22 @@ from ..lib import validators as V
     request_method='GET',
     permission='read')
 def list_cookbooks(context, request):
-    num_versions = V.NodeSchema().to_python(
-        request.params.get('num_versions', 1), None)
+    num_versions = V.CookbookNumVersions.to_python(
+        request.params, None)['num_versions']
     q = M.CookbookVersion.query.find(dict(
             account_id=request.account._id))
     q = q.sort('name')
     result = {}
-    for name, cookbooks in groupby(q, key=lambda cb:cb.name):
-        cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
-        cookbooks = cookbooks[:num_versions]
+    for name, versions in groupby(q, key=lambda cb:cb.cookbook_name):
+        cookbook = find_resource(context, name)
+        versions = sorted(versions, key=lambda cb:cb.version_vector)
+        versions = versions[:num_versions]
+        versions = map(cookbook.decorate_child, versions)
         result[name] = dict(
-            url=M.CookbookVersion.cookbook_url(request, name),
+            url=request.resource_url(context, name, ''),
             versions=[
-                dict(url=cb.url(request), version=cb.version)
-                for cb in cookbooks ])
+                dict(url=request.resource_url(cb), version=cb.version)
+                for cb in versions ])
     return result
 
 @view_config(
@@ -36,22 +39,24 @@ def list_cookbooks(context, request):
     request_method='GET',
     permission='read')
 def view_cookbook(context, request):
-    num_versions = V.NodeSchema().to_python(
-        request.params.get('num_versions', 1), None)
-    cookbooks = M.CookbookVersion.query.find(dict(
+    num_versions = V.CookbookNumVersions.to_python(
+        request.params, None)['num_versions']
+    versions = context.find(dict(
+            cookbook_name=context.name)).all()
+    versions = M.CookbookVersion.query.find(dict(
             account_id=request.account._id,
-            name=context.name)).all()
-    if not cookbooks:
+            cookbook_name=context.name)).all()
+    if not versions:
         raise exc.HTTPNotFound()
-    cookbooks = sorted(cookbooks, key=lambda cb:cb.version_vector)
-    cookbooks = cookbooks[:num_versions]
-    return dict(
-        name=dict(
-            url=M.CookbookVersion.cookbook_url(
-                request, context.name),
+    versions = sorted(versions, key=lambda cb:cb.version_vector)
+    versions = versions[:num_versions]
+    versions = map(context.decorate_child, versions)
+    return {
+        context.name: dict(
+            url=request.resource_url(context),
             versions=[
-                dict(url=cb.url(), version=cb.version)
-                for cb in cookbooks ]))
+                dict(url=request.resource_url(cb), version=cb.version)
+                for cb in versions ]) }
 
 @view_config(
     context=M.CookbookVersion,
@@ -67,7 +72,8 @@ def view_cookbook_version(context, request):
     request_method='PUT',
     permission='update')
 def update_cookbook_version(context, request):
-    context.update(V.NodeSchema().to_python(request.json_body, None))
+    context.update(V.CookbookVersionSchema().to_python(
+            request.json_body, None))
     return {}
 
 @view_config(

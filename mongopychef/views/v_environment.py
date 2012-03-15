@@ -7,8 +7,7 @@ from pymongo.errors import DuplicateKeyError
 
 from pyramid.view import view_config
 
-from ..resources import Environments, Environment
-from ..resources import EnvironmentCookbooks, EnvironmentCookbook, EnvironmentCookbookVersions
+from ..resources import Environments
 from .. import model as M
 from ..lib import validators as V
 
@@ -19,8 +18,8 @@ from ..lib import validators as V
     permission='read')
 def list_environments(context, request):
     return dict(
-        (obj.name, obj.url(request))
-        for obj in request.account.find_objects(M.Environment))
+        (obj.name, request.resource_url(obj))
+        for obj in context.find())
 
 @view_config(
     context=Environments,
@@ -35,44 +34,38 @@ def create_environment(context, request):
     except DuplicateKeyError:
         M.orm_session.expunge(env)
         raise exc.HTTPConflict()
-    return dict(uri=env.url(request))
+    return dict(uri=request.resource_url(env))
 
 @view_config(
-    context=Environment,
+    context=M.Environment,
     renderer='json',
     request_method='GET',
     permission='read')
 def read_environment(context, request):
-    if context.environment is None:
-        raise exc.HTTPNotFound()
-    return context.environment.__json__()
+    return context.__json__()
 
 @view_config(
-    context=Environment,
+    context=M.Environment,
     renderer='json',
     request_method='PUT',
     permission='update')
 def update_environment(context, request):
-    if context.environment is None:
-        raise exc.HTTPNotFound()
     data = V.EnvironmentSchema().to_python(request.json_body, None)
-    assert data['name'] == context.environment.name
-    context.environment.update(data)
-    return context.environment.__json__()
+    assert data['name'] == context.name
+    context.update(data)
+    return context.__json__()
     
 @view_config(
-    context=Environment,
+    context=M.Environment,
     renderer='json',
     request_method='DELETE',
     permission='delete')
 def delete_environment(context, request):
-    if context.environment is None:
-        raise exc.HTTPNotFound()
-    context.environment.delete()
-    return context.environment.__json__()
+    context.delete()
+    return context.__json__()
 
 @view_config(
-    context=EnvironmentCookbooks,
+    context=M.EnvironmentCookbooks,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -95,7 +88,7 @@ def list_environment_cookbooks(context, request):
     return result
 
 @view_config(
-    context=EnvironmentCookbook,
+    context=M.EnvironmentCookbook,
     renderer='json',
     request_method='GET',
     permission='read')
@@ -118,7 +111,7 @@ def read_environment_cookbook(context, request):
                 for cb in cookbooks ]))
 
 @view_config(
-    context=EnvironmentCookbookVersions,
+    context=M.EnvironmentCookbookVersions,
     renderer='json',
     request_method='POST',
     permission='read')

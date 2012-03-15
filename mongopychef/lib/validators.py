@@ -6,12 +6,12 @@ from formencode import validators as fev
 
 from .. import model as M
 
-class CookbookNumVersions(fev.Int):
+class NumVersions(S.Int):
 
-    def _to_python(self, value, state):
-        if value == 'all':
-            return sys.maxint
-        return super(CookbookNumVersions, self)._to_python(value, state)
+    def _validate(self, value, **kwargs):
+        if value is None: return self.if_missing
+        if value == 'all': return sys.maxint
+        return super(NumVersions, self)._validate(value, **kwargs)
 
 class JSONSchema(fev.FancyValidator):
 
@@ -56,6 +56,9 @@ class JSONSchema(fev.FancyValidator):
         elif err.error_list:
             d['error_list'] = map(cls.jsonify_invalid, err.error_list)
         return d
+
+    def empty_value(self, value):
+        return self.schema.validate(S.Missing)
         
 class JSONModelSchema(JSONSchema):
     model_class=None
@@ -125,3 +128,6 @@ DatabagItemSchema = JSONSchema(
     
 EnvironmentCookbookVersionsSchema = JSONSchema(dict(run_list=[str]))
 SandboxSchema = JSONSchema(dict(checksums={str:None}))
+CookbookNumVersions = JSONSchema(
+    dict(num_versions=NumVersions(if_missing=1)))
+

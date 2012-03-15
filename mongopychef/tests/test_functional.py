@@ -73,11 +73,6 @@ class ChefTest(TestCase):
             )
         self.app = webtest.TestApp(app)
         
-        # self.config = testing.setUp()
-        # self.config.include('mongopychef')
-        # self.site = config.SiteConfig(['hubris', '-c', 'test.yml', 'serve'])
-        # self.app = webtest.TestApp(
-        #     self.site.load_app(self.site.arguments.app_name))
         urllib2.install_opener(
             urllib2.build_opener(_TestUrlLibHandler(self.app)))
         self.bootstrap_data()
@@ -532,9 +527,177 @@ class TestSandbox(ChefTest):
         result = self._download_file()
         self.assertEqual(result, 'Hello World')
 
-class TestCookbook(TestCase):
-    pass
+class TestCookbook(ChefTest):
 
-class TestEnvironment(TestCase):
-    pass
+    def setUp(self):
+        super(TestCookbook, self).setUp()
+        names = [ 'mpc', 'arden' ]
+        versions = [ '1.0', '1.1', '1.2' ]
+        for name in names:
+            for version in versions:
+                self.a1.new_object(
+                    M.CookbookVersion,
+                    name='%s-%s' % (name, version),
+                    cookbook_name=name,
+                    version=version)
+        M.orm_session.flush()
+        M.orm_session.clear()
 
+    def test_list_cookbooks_default(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks')
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'}]},
+                u'mpc': {
+                    u'url': u'http://test/cookbooks/mpc/',
+                    u'versions': [{u'url': u'http://test/cookbooks/mpc/1.0/', u'version': u'1.0'}]}})
+
+    def test_list_cookbooks_all(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks?num_versions=all')
+        self.maxDiff=None
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'} ] },
+                u'mpc': {
+                    u'url': u'http://test/cookbooks/mpc/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/mpc/1.0/', u'version': u'1.0'},
+                        {u'url': u'http://test/cookbooks/mpc/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/mpc/1.2/', u'version': u'1.2'} ] }
+                })
+
+    def test_view_cookbook_default(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks/arden')
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [{u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'}]}
+                })
+
+    @expect_errors([404])
+    def test_view_cookbook_404(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks/ardien')
+        self.assert_(result['status'].startswith('404'))
+
+    def test_view_cookbook_all(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks/arden?num_versions=all')
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/arden/1.0/', u'version': u'1.0'},
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
+                        ]}
+                })
+
+    def test_view_version(self):
+        result = self.chef_user_1.api_request('GET', '/cookbooks/arden/1.0')
+        self.assertEqual(result, {
+                u'name': u'arden-1.0',
+                u'cookbook_name': u'arden',
+                u'version': u'1.0',
+                u'chef_type': u'cookbook_version',
+                u'json_class': u'Chef::CookbookVersion',
+                u'templates': [],
+                u'files': [],
+                u'providers': [],
+                u'recipes': [],
+                u'libraries': [],
+                u'definitions': [],
+                u'root_files': [],
+                u'attributes': [],
+                u'resources': [],
+                u'metadata': {}})
+
+    def test_update_version(self):
+        version = self.chef_1_validator.api_request('GET', '/cookbooks/arden/1.0')
+        version['metadata'] = dict(a=5)
+        result = self.chef_1_validator.api_request(
+            'PUT', '/cookbooks/arden/1.0/',
+            data=version)
+
+    def test_delete_version(self):
+        self.chef_1_validator.api_request('DELETE', '/cookbooks/arden/1.0/')
+        result = self.chef_1_validator.api_request('GET', '/cookbooks/arden?num_versions=all')
+        self.assertEqual(result, {
+                u'arden': {
+                    u'url': u'http://test/cookbooks/arden/',
+                    u'versions': [
+                        {u'url': u'http://test/cookbooks/arden/1.1/', u'version': u'1.1'},
+                        {u'url': u'http://test/cookbooks/arden/1.2/', u'version': u'1.2'},
+                        ]}
+                })
+
+class TestEnvironment(ChefTest):
+
+    def setUp(self):
+        super(TestEnvironment, self).setUp()
+        self.a1.new_object(
+            M.Environment, name='Test', cookbook_versions=dict(
+                arden='1.2',
+                mpc='1.2'))
+        self.a1.new_object(
+            M.Environment, name='Prod', cookbook_versions=dict(
+                arden='1.0',
+                mpc='1.0'))
+        M.orm_session.flush()
+        M.orm_session.clear()
+
+    def test_list_environ(self):
+        result = self.chef_user_1.api_request('GET', '/environments')
+        self.assertEqual(result, {
+                u'Test': u'http://test/environments/Test/',
+                u'Prod': u'http://test/environments/Prod/'})
+        
+    def test_create_environ_ok(self):
+        result = self.chef_1_validator.api_request('POST', '/environments', data=dict(
+                name='Staging'))
+        result = self.chef_user_1.api_request('GET', '/environments')
+        self.assertEqual(result, {
+                u'Test': u'http://test/environments/Test/',
+                u'Staging': u'http://test/environments/Staging/',
+                u'Prod': u'http://test/environments/Prod/'})
+        
+    @expect_errors([409])
+    def test_create_environ_dupe(self):
+        result = self.chef_1_validator.api_request('POST', '/environments', data=dict(
+                name='Test'))
+        self.assert_(result['status'].startswith('409'))
+
+    def test_read_environ(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test')
+        self.assertEqual(result, {
+                u'chef_type': u'environment',
+                u'default_attributes': {},
+                u'description': '',
+                u'override_attributes': {},
+                u'cookbook_versions': {u'arden': u'1.2', u'mpc': u'1.2'},
+                u'json_class': u'Chef::Environment',
+                u'name': u'Test'})
+
+    def test_update_environ(self):
+        result = self.chef_user_1.api_request('GET', '/environments/Test')
+        result['description'] = 'The test environ'
+        result = self.chef_1_validator.api_request('PUT', '/environments/Test', data=result)
+        self.assertEqual(result, {
+                u'chef_type': u'environment',
+                u'default_attributes': {},
+                u'description': 'The test environ',
+                u'override_attributes': {},
+                u'cookbook_versions': {u'arden': u'1.2', u'mpc': u'1.2'},
+                u'json_class': u'Chef::Environment',
+                u'name': u'Test'})
+
+    def test_delete_environ(self):
+        self.chef_1_validator.api_request('DELETE', '/environments/Test')
+        result = self.chef_user_1.api_request('GET', '/environments')
+        self.assertEqual(result, {
+                u'Prod': u'http://test/environments/Prod/'})
+        
+    
