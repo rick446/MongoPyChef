@@ -52,7 +52,7 @@ class Root(dict):
 
     def __init__(self, request):
         self.request = request
-        self.account = request.account
+        self.account = getattr(request, 'account', None)
 
     def __getitem__(self, name):
         return self.children[name](self.request, self, self.account)

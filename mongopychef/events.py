@@ -35,10 +35,7 @@ def authorize_request(event):
         b64_sig = ''.join(v for k,v in sig_hdrs)
         signature = binascii.a2b_base64(b64_sig)
         if _signature_is_valid(client.key, signature, creq):
-            if client.user:
-                req.environ['REMOTE_USER'] = client.user.username
-            else:
-                req.environ['REMOTE_USER'] = userid
+            req.environ['REMOTE_USER'] = client.name
             req.environ['REMOTE_ACCOUNT'] = client.account
             req.environ['CLIENT'] = client
             req.environ['REMOTE_USER'] = client

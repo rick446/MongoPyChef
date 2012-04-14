@@ -21,7 +21,9 @@ def list_clients(context, request):
              permission='create')
 def create_client(context, request):
     cli, key = M.Client.generate(
-        request.client.principal, **request.json_body)
+        request.account,
+        strength=request.registry.settings.key_strength,
+        **request.json_body)
     cli.__parent__ = context
     try:
         M.orm_session.flush(cli)

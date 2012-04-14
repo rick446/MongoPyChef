@@ -12,11 +12,13 @@ from pyramid import testing
 from mongopychef import main
 from mongopychef import model as M
 
-user_1_key = RSA.generate(1536)
-user_2_key = RSA.generate(1536)
-user_3_key = RSA.generate(1536)
-validator_1_key = RSA.generate(1536)
-validator_2_key = RSA.generate(1536)
+WEAK=1536
+
+user_1_key = RSA.generate(WEAK)
+user_2_key = RSA.generate(WEAK)
+user_3_key = RSA.generate(WEAK)
+validator_1_key = RSA.generate(WEAK)
+validator_2_key = RSA.generate(WEAK)
 
 class _TestUrlLibHandler(urllib2.BaseHandler):
 
@@ -62,14 +64,15 @@ class ChefTest(TestCase):
         app = main(
             {}, 
             **{'debug_authorization': 'false',
-             'debug_notfound': 'false',
-             'debug_routematch': 'false',
-             'debug_templates': 'true',
-             'default_locale_name': 'en',
-             'ming.chef.database': 'chef',
-             'ming.chef.master': 'mim:///',
-             'reload_templates': 'true',
-             'session_secret': 'itsasecret'}
+               'debug_notfound': 'false',
+               'debug_routematch': 'false',
+               'debug_templates': 'true',
+               'default_locale_name': 'en',
+               'ming.chef.database': 'chef',
+               'ming.chef.master': 'mim:///',
+               'reload_templates': 'true',
+               'key_strength': 1536,
+               'session_secret': 'itsasecret'}
             )
         self.app = webtest.TestApp(app)
         
@@ -108,17 +111,17 @@ class ChefTest(TestCase):
     def bootstrap_data(self):
         M.doc_session.db.connection.clear_all()
         M.orm_session.clear()
-        a1, (g_admin1, g_engr1, g_user1) = M.Account.bootstrap('test-1')
-        a2, (g_admin2, g_engr2, g_user2) = M.Account.bootstrap('test-2')
-        u1 = a1.add_user('test-user-1', groups=[g_user1])
-        u2 = a2.add_user('test-user-2', groups=[g_user2])
-        u3 = a2.add_user('test-user-3', groups=[g_admin2])
+        a1 = M.Account.bootstrap('test-1')
+        a2 = M.Account.bootstrap('test-2')
         M.orm_session.flush()
         M.Client.generate(a1, private_key=validator_1_key, admin=True)
         M.Client.generate(a2, private_key=validator_2_key, admin=True)
-        M.Client.generate(u1, private_key=user_1_key)
-        M.Client.generate(u2, private_key=user_2_key)
-        M.Client.generate(u3, private_key=user_3_key)
+        M.Client.generate(a1, 'test-user-1', admin=False,
+                          private_key=user_1_key)
+        M.Client.generate(a2, 'test-user-2', admin=False,
+                          private_key=user_2_key)
+        M.Client.generate(a2, 'test-user-3', admin=True,
+                          private_key=user_3_key)
         M.orm_session.flush()
         M.orm_session.clear()
         self.a1 = a1
@@ -153,7 +156,7 @@ class TestClient(ChefTest):
             'POST', '/clients', data=dict(
                     name='rick', admin=True))
         self.assertEqual(result['uri'], 'http://test/clients/rick/')
-        self.assert_(1600 < len(result['private_key']) < 1700)
+        self.assertEqual(len(result['private_key']), 1276)
 
     @expect_errors([409])
     def test_create_duplicate(self):
