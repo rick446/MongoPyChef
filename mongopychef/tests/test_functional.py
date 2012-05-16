@@ -156,7 +156,7 @@ class TestClient(ChefTest):
             'POST', '/clients', data=dict(
                     name='rick', admin=True))
         self.assertEqual(result['uri'], 'http://test/clients/rick/')
-        self.assertEqual(len(result['private_key']), 1276)
+        self.assert_(1270 < len(result['private_key']) < 1300)
 
     @expect_errors([409])
     def test_create_duplicate(self):
