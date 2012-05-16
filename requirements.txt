@@ -2,8 +2,7 @@ Chameleon==2.8.2
 FormEncode==1.2.4
 Mako==0.7.0
 MarkupSafe==0.15
--e git+ssh://rick446@git.code.sf.net/p/merciless/code@06e23de6b419b61c1bd2e624925be6be32a67f3a#egg=Ming-dev
--e git+git@github.com:rick446/MongoPyChef@60a7a3767a14d9be3d10e79043faa1345ed591ee#egg=MongoPyChef-dev
+Ming==0.3.1dev-20120323
 Paste==1.7.5.1
 PasteDeploy==1.5.0
 PasteScript==1.7.5
