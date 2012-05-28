@@ -39,8 +39,8 @@ def authorize_request(event):
             req.environ['REMOTE_ACCOUNT'] = client.account
             req.environ['CLIENT'] = client
             req.environ['REMOTE_USER'] = client
-            req.client = client
-            req.account = client.account
+            req.chef_client = client
+            req.chef_account = client.account
     except KeyError:
         pass
     except:

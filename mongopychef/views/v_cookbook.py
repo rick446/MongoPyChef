@@ -7,6 +7,7 @@ from pyramid.traversal import find_resource
 
 from ..resources import Cookbooks, Cookbook
 from .. import model as M
+from .. import security
 from ..lib import validators as V
 
 @view_config(
@@ -17,7 +18,8 @@ from ..lib import validators as V
 def list_cookbooks(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
-    q = request.account.find_objects(M.CookbookVersion)
+    account = security.get_account(request)
+    q = account.find_objects(M.CookbookVersion)
     q = q.sort('name')
     result = {}
     for name, versions in groupby(q, key=lambda cb:cb.cookbook_name):
@@ -40,7 +42,8 @@ def list_cookbooks(context, request):
 def view_cookbook(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
-    versions = request.account.find_objects(
+    account = security.get_account(request)
+    versions = account.find_objects(
         M.CookbookVersion, dict(cookbook_name=context.name)).all()
     if not versions:
         raise exc.HTTPNotFound()

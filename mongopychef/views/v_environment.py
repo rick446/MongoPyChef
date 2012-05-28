@@ -1,4 +1,3 @@
-import sys
 from itertools import groupby
 
 from webob import exc
@@ -9,6 +8,7 @@ from pyramid.traversal import find_resource
 
 from ..resources import Environments
 from .. import model as M
+from .. import security
 from ..lib import validators as V
 
 @view_config(
@@ -27,7 +27,8 @@ def list_environments(context, request):
     request_method='POST',
     permission='create')
 def create_environment(context, request):
-    env = M.Environment(account_id=request.account._id)
+    account = security.get_account(request)
+    env = M.Environment(account_id=account._id)
     env.update(V.EnvironmentSchema().to_python(request.json_body, None))
     try:
         M.orm_session.flush(env)
@@ -72,7 +73,8 @@ def delete_environment(context, request):
 def list_environment_cookbooks(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
-    q = request.account.find_objects(M.CookbookVersion)
+    account = security.get_account(request)
+    q = account.find_objects(M.CookbookVersion)
     q = q.sort('name')
     result = {}
     for name, versions in groupby(q, key=lambda cb:cb.cookbook_name):
@@ -97,7 +99,8 @@ def read_environment_cookbook(context, request):
     num_versions = V.CookbookNumVersions.to_python(
         request.params, None)['num_versions']
     cookbook = find_resource(request.root, 'cookbooks/' + context.name)
-    versions = request.account.find_objects(
+    account = security.get_account(request)
+    versions = account.find_objects(
         M.CookbookVersion, dict(cookbook_name=context.name)).all()
     if not versions:
         raise exc.HTTPNotFound()

@@ -5,6 +5,7 @@ from pyramid.view import view_config
 
 from ..resources import Clients
 from .. import model as M
+from .. import security
 
 @view_config(
     context=Clients,
@@ -21,7 +22,7 @@ def list_clients(context, request):
              permission='create')
 def create_client(context, request):
     cli, key = M.Client.generate(
-        request.account,
+        security.get_account(request),
         strength=request.registry.settings.key_strength,
         **request.json_body)
     cli.__parent__ = context
@@ -40,7 +41,8 @@ def create_client(context, request):
     request_method='GET',
     permission='read')
 def get_client(context, request):
-    if not request.client.admin and context != request.client:
+    client = security.get_client(request)
+    if not client.admin and context != client:
         raise exc.HTTPForbidden()
     return context.__json__()
 

@@ -6,6 +6,11 @@ from . import model as M
 
 log = logging.getLogger(__name__)
 
+def get_account(request):
+    return getattr(request, 'chef_account', None)
+
+def get_client(request):
+    return getattr(request, 'chef_client', None)
 
 class ChefAuthorizationPolicy(ACLAuthorizationPolicy):
     """ An object representing a Pyramid authorization policy. """

@@ -1,6 +1,7 @@
 from .r_base import ResourceCollection
 
 from .. import model as M
+from .. import security
 
 from .r_cookbook import Cookbooks
 
@@ -52,7 +53,7 @@ class Root(dict):
 
     def __init__(self, request):
         self.request = request
-        self.account = getattr(request, 'account', None)
+        self.account = security.get_account(request)
 
     def __getitem__(self, name):
         return self.children[name](self.request, self, self.account)
